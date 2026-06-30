@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Drum Cage — 3-Panel Front Design</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#1b1f1d; --panel:#232825; --wood:#c9a876; --wood-dark:#8a6a42;
+    --poly:#bcd6da; --accent:#e8b84b; --line:#3a4039; --text:#eee7d8; --muted:#9aa39a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;}
+  header{padding:18px 24px 8px;border-bottom:1px solid var(--line);}
+  h1{font-size:20px;margin:0 0 4px;letter-spacing:.5px;color:var(--accent);}
+  .sub{color:var(--muted);font-size:13px;}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--panel);}
+  .controls label{font-size:12px;color:var(--muted);margin-right:6px;}
+  button.mode{background:#2c3329;color:var(--text);border:1px solid var(--line);padding:7px 12px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:3px;}
+  button.mode.active{background:var(--accent);color:#1b1f1d;border-color:var(--accent);font-weight:bold;}
+  input[type=range]{width:140px;}
+  .layout{display:flex;flex-wrap:wrap;gap:0;}
+  #viewer{width:100%;max-width:780px;height:520px;background:radial-gradient(circle at 50% 30%,#262b27,#151815);position:relative;}
+  #specs{flex:1;min-width:300px;padding:18px 22px;font-size:12.5px;line-height:1.6;color:var(--text);}
+  #specs h2{font-size:14px;color:var(--accent);margin:14px 0 6px;}
+  #specs table{border-collapse:collapse;width:100%;margin-bottom:6px;}
+  #specs td{padding:2px 6px 2px 0;border-bottom:1px solid var(--line);}
+  #specs td.k{color:var(--muted);width:60%;}
+  .note{color:var(--muted);font-size:11.5px;border-left:2px solid var(--accent);padding-left:8px;margin:8px 0;}
+  .drawing-wrap{padding:24px;border-top:1px solid var(--line);background:#181b18;}
+  .drawing-wrap h2{color:var(--accent);font-size:15px;margin-top:0;}
+  svg text{fill:var(--text);font-family:'Courier New',monospace;}
+  .hint{position:absolute;bottom:8px;left:12px;font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<header>
+  <h1>Drum Cage — Split-Panel Front Redesign</h1>
+  <div class="sub">Original: one 120" (10ft) bent polycarbonate sheet, R≈47", over a 90" wide / 33.35" deep bow. Modified: same bow broken into 3 straight-ish shields.</div>
+</header>
+
+<div class="controls">
+  <label>Front split:</label>
+  <button class="mode active" data-mode="343">3 - 4 - 3 ft (recommended)</button>
+  <button class="mode" data-mode="262">2 - 6 - 2 ft (alt, needs wide stock)</button>
+  <button class="mode" data-mode="curve">Original single curve</button>
+  <label style="margin-left:18px;">Cage height:</label>
+  <input id="heightSlider" type="range" min="60" max="96" value="80">
+  <span id="heightVal">80"</span>
+  <label style="margin-left:18px;"><input type="checkbox" id="bendToggle" > bend center to full depth</label>
+  <label style="margin-left:18px;"><input type="checkbox" id="doorToggle" checked> show door (left wall)</label>
+  <label style="margin-left:18px;"><input type="checkbox" id="casterToggle" checked> show corner wheels</label>
+  <label style="margin-left:18px;"><input type="checkbox" id="ceilingToggle" checked> show roof + foam ceiling</label>
+</div>
+
+<div class="layout">
+  <div id="viewer"><div class="hint">drag = orbit · wheel = zoom</div></div>
+  <div id="specs"></div>
+</div>
+
+<div class="drawing-wrap">
+  <h2>Top-down cut/build drawing — 3' - 4' - 3' split (recommended)</h2>
+  <svg id="planSvg" viewBox="0 0 900 520" width="100%" height="460"></svg>
+  <p class="note">All dimensions in inches. R = circle radius the original bow was drawn on (≈47"). The two 3ft side shields are essentially flat (only ~0.9" of natural curve over their length — cut them straight). The 4ft center shield is bowed ~6" over its 48" length to keep the booth's full 81.35" depth; if you'd rather it be perfectly flat, depth shrinks to 75.36" at the center (toggle above shows both). Door is set into the left straight side wall, 30" wide.</p>
+</div>
+
+<div class="drawing-wrap">
+  <h2>Floor plan — plywood deck, joist grid &amp; corner casters</h2>
+  <svg id="floorSvg" viewBox="0 0 900 520" width="100%" height="460"></svg>
+  <p class="note">Joist grid (≈16" o.c.) carries the plywood deck and holds the mineral-wool sound-deadening fill, same idea as your reference build. The floor (and the roof, directly above it) are both cut ~2.5" larger than the wall line all the way around, so they fully cover/cap the frame with a small lip rather than stopping flush at the studs. All 6 hexagon corners now get a locking caster (back-L, back-R, side-R, the 2 front panel joints, side-L) for full support and easy rolling.</p>
+</div>
+
+<div class="drawing-wrap" id="bomWrap">
+  <h2>Materials list (bill of materials)</h2>
+  <div id="bom"></div>
+  <p class="note">Quantities are planning estimates sized to the dimensions/height above, with ~10–15% waste already factored into sheet/board counts. Round up to your supplier's stock sizes; always good to get 1 extra sheet of plywood for the inevitable mis-cut.</p>
+</div>
+
+<script>
+// ---------- geometry ----------
+const R = 47.03; // in, radius of original bow
+const HALFCHORD = 45; // half of the 90" chord
+const BACK_DEPTH = 48; // in, straight side-wall depth before the bow starts
+const SAGITTA = 33.354;
+const totalAngle = 2*Math.asin(HALFCHORD/R); // rad
+
+function splitToPoints(segLensFt){ // array of feet lengths, e.g [3,4,3]
+  const lens = segLensFt.map(f=>f*12);
+  const total = lens.reduce((a,b)=>a+b,0);
+  let angAcc = -totalAngle/2;
+  const pts = [{a:angAcc}];
+  lens.forEach(L=>{ angAcc += L/R; pts.push({a:angAcc}); });
+  // local coords: x = R sin(a), y = R cos(a) + (apex_y - R), apex_y = SAGITTA
+  return pts.map(p=>({
+    x: R*Math.sin(p.a),
+    y: BACK_DEPTH + (SAGITTA - R) + R*Math.cos(p.a)
+  }));
+}
+function curvePoints(n){
+  const pts=[];
+  for(let i=0;i<=n;i++){
+    const a = -totalAngle/2 + (totalAngle*i/n);
+    pts.push({x:R*Math.sin(a), y: BACK_DEPTH + (SAGITTA-R) + R*Math.cos(a)});
+  }
+  return pts;
+}
+
+function chordLen(p0,p1){return Math.hypot(p1.x-p0.x,p1.y-p0.y);}
+
+// door: set into the LEFT straight side wall (x=-45, y:0..48)
+const DOOR_W = 30;
+const DOOR_MARGIN = (BACK_DEPTH - DOOR_W)/2; // 9in each side
+const CASTER_R = 2; // in, wheel radius
+const CASTER_INSET = 6; // in, pulled in from the very corner so the post sits on the plate
+
+const modes = {
+  "343": ()=>splitToPoints([3,4,3]),
+  "262": ()=>splitToPoints([2,6,2]),
+  "curve": ()=>curvePoints(28)
+};
+
+// full plan (back wall + side walls + front) for a given front point list
+function fullPlan(frontPts){
+  return [
+    {x:-HALFCHORD,y:0}, {x:HALFCHORD,y:0}, // back wall (drawn order fixed below)
+    ...frontPts
+  ];
+}
+
+// ---------- three.js scene ----------
+const viewerEl = document.getElementById('viewer');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, viewerEl.clientWidth/viewerEl.clientHeight, 1, 2000);
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
+viewerEl.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff,0.65));
+const dl = new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(120,200,150); scene.add(dl);
+const dl2 = new THREE.DirectionalLight(0x88aaff,0.25); dl2.position.set(-150,80,-100); scene.add(dl2);
+
+const rig = new THREE.Group(); scene.add(rig);
+let radius=260, theta=0.9, phi=1.05;
+function updateCam(){
+  camera.position.set(radius*Math.sin(phi)*Math.sin(theta), radius*Math.cos(phi), radius*Math.sin(phi)*Math.cos(theta));
+  camera.lookAt(0, 30, 35);
+}
+updateCam();
+
+let dragging=false, lastX=0,lastY=0;
+renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
+window.addEventListener('pointerup',()=>dragging=false);
+window.addEventListener('pointermove',e=>{
+  if(!dragging)return;
+  theta -= (e.clientX-lastX)*0.006;
+  phi   -= (e.clientY-lastY)*0.006;
+  phi = Math.max(0.25, Math.min(1.5, phi));
+  lastX=e.clientX; lastY=e.clientY;
+  updateCam();
+});
+renderer.domElement.addEventListener('wheel',e=>{
+  radius += e.deltaY*0.2;
+  radius = Math.max(120, Math.min(550, radius));
+  updateCam(); e.preventDefault();
+},{passive:false});
+
+const woodMat = new THREE.MeshStandardMaterial({color:0xc9a876, roughness:0.85, metalness:0.05, side:THREE.DoubleSide});
+const frameMat = new THREE.MeshStandardMaterial({color:0x8a6a42, roughness:0.8, side:THREE.DoubleSide});
+const polyMat = new THREE.MeshPhysicalMaterial({color:0xbcd6da, roughness:0.15, metalness:0, transparent:true, opacity:0.35, side:THREE.DoubleSide});
+const floorMat = new THREE.MeshStandardMaterial({color:0x7a5a36, roughness:0.9, side:THREE.DoubleSide});
+const doorMat = new THREE.MeshStandardMaterial({color:0x6e5535, roughness:0.7, side:THREE.DoubleSide});
+const wheelMat = new THREE.MeshStandardMaterial({color:0x111111, roughness:0.6});
+const plateMat = new THREE.MeshStandardMaterial({color:0x999999, roughness:0.5, metalness:0.4});
+const foamMat = new THREE.MeshStandardMaterial({color:0x1c4f78, roughness:0.55, metalness:0.05});
+const OVERHANG = 2.5; // in, floor/roof lip beyond the wall line
+
+function offsetPolygon(pts, margin){
+  const n = pts.length;
+  let cx=0,cy=0; pts.forEach(p=>{cx+=p.x;cy+=p.y;}); cx/=n; cy/=n;
+  // offset each edge outward along its own normal (keeps straight edges straight),
+  // then re-intersect consecutive offset edges to get sharp mitered corners —
+  // matches a real plywood/trim build where each flat panel gets its own straight cap piece.
+  const lines = [];
+  for(let i=0;i<n;i++){
+    const p1=pts[i], p2=pts[(i+1)%n];
+    const dx=p2.x-p1.x, dy=p2.y-p1.y;
+    const len=Math.hypot(dx,dy)||1;
+    let nx=-dy/len, ny=dx/len;
+    const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+    if((mx-cx)*nx+(my-cy)*ny < 0){ nx=-nx; ny=-ny; } // make sure normal points outward, away from centroid
+    lines.push({
+      p1:{x:p1.x+nx*margin, y:p1.y+ny*margin},
+      p2:{x:p2.x+nx*margin, y:p2.y+ny*margin}
+    });
+  }
+  function lineIntersect(a1,a2,b1,b2){
+    const d1x=a2.x-a1.x, d1y=a2.y-a1.y, d2x=b2.x-b1.x, d2y=b2.y-b1.y;
+    const denom = d1x*d2y - d1y*d2x;
+    if(Math.abs(denom)<1e-9) return {x:(a2.x+b1.x)/2, y:(a2.y+b1.y)/2};
+    const t = ((b1.x-a1.x)*d2y - (b1.y-a1.y)*d2x)/denom;
+    return {x:a1.x+d1x*t, y:a1.y+d1y*t};
+  }
+  const out=[];
+  for(let i=0;i<n;i++){
+    const prev = lines[(i-1+n)%n], curr = lines[i];
+    out.push(lineIntersect(prev.p1,prev.p2,curr.p1,curr.p2));
+  }
+  return out;
+}
+function pointInPoly(x,y,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].x, yi=poly[i].y, xj=poly[j].x, yj=poly[j].y;
+    const hit = ((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi);
+    if(hit) inside=!inside;
+  }
+  return inside;
+}
+function buildSlab(shapePts, yBottom, thickness, mat){
+  const shape = new THREE.Shape(shapePts.map(p=>new THREE.Vector2(p.x,p.y)));
+  const geo = new THREE.ExtrudeGeometry(shape, {depth:thickness, bevelEnabled:false});
+  // ExtrudeGeometry builds in local (x, y, z:0..thickness). rotateX(+90deg) maps that to
+  // world (x, -z, y) i.e. world depth(Z) = +y (matches the walls, which use p.y directly as world Z).
+  // Using -90deg here previously made world Z = -y, mirroring floor/roof relative to the walls.
+  geo.rotateX(Math.PI/2);
+  geo.translate(0, yBottom+thickness, 0);
+  return new THREE.Mesh(geo, mat);
+}
+function buildFoamCeiling(footprintPts, ceilingY, group){
+  const spacing = 4.4, pyrH = 4, pyrR = spacing/2*0.95;
+  const baseGeo = new THREE.ConeGeometry(pyrR, pyrH, 4);
+  baseGeo.rotateY(Math.PI/4); // square the pyramid to the grid
+  baseGeo.rotateX(Math.PI);  // apex points down into the room
+  const xs=[]; for(let x=-44;x<=44;x+=spacing) xs.push(x);
+  const ys=[]; for(let y=4;y<=82;y+=spacing) ys.push(y);
+  const cells=[];
+  xs.forEach(x=>ys.forEach(y=>{ if(pointInPoly(x,y,footprintPts)) cells.push({x,y}); }));
+  const inst = new THREE.InstancedMesh(baseGeo, foamMat, Math.max(cells.length,1));
+  const dummy = new THREE.Object3D();
+  cells.forEach((c,i)=>{
+    dummy.position.set(c.x, ceilingY-pyrH/2, c.y);
+    dummy.updateMatrix();
+    inst.setMatrixAt(i, dummy.matrix);
+  });
+  inst.count = cells.length;
+  group.add(inst);
+}
+
+function lerpPt(p0,p1,t){ return {x:p0.x+(p1.x-p0.x)*t, y:p0.y+(p1.y-p0.y)*t}; }
+
+// builds the left wall as 3 wood sections (below-door header strip + 2 jambs) plus a separate door slab + hinges + handle
+function buildWallWithDoor(p0,p1,height,withDoor,group){
+  const L = chordLen(p0,p1);
+  if(!withDoor){ group.add(quad(p0,p1,0,height,woodMat)); return; }
+  const t0 = DOOR_MARGIN/L, t1=(DOOR_MARGIN+DOOR_W)/L;
+  const dStart = lerpPt(p0,p1,t0), dEnd = lerpPt(p0,p1,t1);
+  const doorH = Math.min(78, height-2);
+  // jamb sections (full height) left and right of opening
+  group.add(quad(p0,dStart,0,height,woodMat));
+  group.add(quad(dEnd,p1,0,height,woodMat));
+  // header above the door
+  group.add(quad(dStart,dEnd,doorH,height,woodMat));
+  // door slab, inset slightly toward interior (+x direction since this wall is at x=-45, interior is +x)
+  const inset = 1.0;
+  const dStartIn = {x:dStart.x+inset,y:dStart.y}, dEndIn = {x:dEnd.x+inset,y:dEnd.y};
+  group.add(quad(dStartIn,dEndIn,1,doorH,doorMat));
+  // hinges (3, on the dStart edge)
+  [0.12,0.5,0.88].forEach(f=>{
+    const h = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,3,8), plateMat);
+    h.rotation.x = Math.PI/2;
+    h.position.set(dStartIn.x, doorH*f, dStartIn.y);
+    group.add(h);
+  });
+  // handle (on the dEnd edge, mid height)
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(2.2,1,1), plateMat);
+  handle.position.set(dEndIn.x+1.2, doorH*0.45, dEndIn.y);
+  group.add(handle);
+}
+
+function addCaster(group,p,floorBottomY){
+  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(CASTER_R,CASTER_R,1.6,16), wheelMat);
+  wheel.rotation.z = Math.PI/2;
+  wheel.position.set(p.x, floorBottomY-CASTER_R, p.y);
+  group.add(wheel);
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(3.5,1.2,3.5), plateMat);
+  plate.position.set(p.x, floorBottomY+0.6, p.y);
+  group.add(plate);
+}
+
+function quad(p0,p1,h0,h1,mat){
+  const geo = new THREE.BufferGeometry();
+  const v = new Float32Array([
+    p0.x,h0,p0.y,  p1.x,h0,p1.y,  p1.x,h1,p1.y,
+    p0.x,h0,p0.y,  p1.x,h1,p1.y,  p0.x,h1,p0.y
+  ]);
+  geo.setAttribute('position', new THREE.BufferAttribute(v,3));
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, mat);
+}
+
+function buildScene(modeKey, height, bend, showDoor, showCasters, showCeiling){
+  while(rig.children.length) rig.children.pop();
+  const front = modes[modeKey]();
+
+  // perimeter for floor shape: back-left, back-right, then front points (right->left order needs correct winding)
+  const backL = {x:-HALFCHORD,y:0}, backR = {x:HALFCHORD,y:0};
+  const sideR0 = {x:HALFCHORD,y:BACK_DEPTH}, sideL0 = {x:-HALFCHORD,y:BACK_DEPTH};
+
+  // wall-line shape (top view) — true footprint, used for walls/foam-clip
+  // front[] runs left-to-right (front[0]=left bow end ≈ sideL0, front[last]=right bow end ≈ sideR0)
+  // perimeter must run sideR0 -> (front interior points, right-to-left) -> sideL0, so reverse it here
+  const shapePts = [backL, backR, sideR0, ...front.slice(1,-1).reverse(), sideL0];
+  // floor/roof get a small overhang lip beyond the wall line, so they fully cover the structure
+  const overhangPts = offsetPolygon(shapePts, OVERHANG);
+
+  const floor = buildSlab(overhangPts, -3, 3, floorMat);
+  rig.add(floor);
+
+  if(showCeiling){
+    const roof = buildSlab(overhangPts, height, 3, woodMat);
+    rig.add(roof);
+    buildFoamCeiling(shapePts, height, rig);
+  }
+
+  // back wall
+  rig.add(quad(backL, backR, 0, height, woodMat));
+  // right side wall — now polycarbonate (clear) to match the front shields
+  rig.add(quad(backR, sideR0, 0, height, polyMat));
+  // left side wall (door lives here) — stays solid wood for structure/privacy
+  buildWallWithDoor(backL, sideL0, height, showDoor, rig);
+
+  // casters at all 6 hexagon corners (back-L, back-R, side-R, the 2 front panel joints, side-L)
+  if(showCasters){
+    shapePts.forEach(p=>addCaster(rig,p,-3));
+  }
+
+  // front panels (between sideR0..front[last]..front[0]..sideL0, but front already spans sideR-ish to sideL-ish)
+  // front points go from +x (right) to -x (left) by construction (asin angle increasing)
+  for(let i=0;i<front.length-1;i++){
+    let p0=front[i], p1=front[i+1];
+    rig.add(quad(p0,p1,0,height, modeKey==='curve' ? polyMat : polyMat));
+    // corner posts
+    rig.add(new THREE.Mesh(new THREE.BoxGeometry(2.5,height,2.5), frameMat).translateX(p0.x).translateY(height/2).translateZ(p0.y));
+  }
+  // end posts
+  [backL,backR,sideR0,sideL0].forEach(p=>{
+    rig.add(new THREE.Mesh(new THREE.BoxGeometry(2.5,height,2.5), frameMat).translateX(p.x).translateY(height/2).translateZ(p.y));
+  });
+
+  // optional bend visual for center panel(s) when not 'curve' mode and bend checked
+  if(modeKey!=='curve' && bend && front.length>=4){
+    // replace middle segment with a gently curved strip (visual only)
+    const segCount = front.length-1;
+    const midIdx = Math.floor(segCount/2);
+    const p0 = front[midIdx], p1 = front[midIdx+1];
+    const segs = modeKey==='343' ? [3,4,3] : [2,6,2];
+    const midLenIn = segs[1]*12;
+    const chord = chordLen(p0,p1);
+    // local radius giving this chord/arc-length pair: reuse global R since same physical curve
+    const halfAngle = midLenIn/(2*R);
+    const n=10;
+    const mx=(p0.x+p1.x)/2, my=(p0.y+p1.y)/2;
+    const dirx=(p1.x-p0.x)/chord, diry=(p1.y-p0.y)/chord;
+    const nx=-diry, ny=dirx; // outward normal (toward +y roughly)
+    const sag = R*(1-Math.cos(halfAngle));
+    const pts=[];
+    for(let i=0;i<=n;i++){
+      const t=i/n; // 0..1 along chord
+      const along = (t-0.5)*chord;
+      const bulge = sag*(1-Math.pow(2*t-1,2)); // parabolic approx of arc bulge
+      pts.push({x: mx+dirx*along+nx*bulge, y: my+diry*along+ny*bulge});
+    }
+    for(let i=0;i<pts.length-1;i++) rig.add(quad(pts[i],pts[i+1],0,height,polyMat));
+  }
+
+  document.getElementById('specs').innerHTML = buildSpecsHTML(modeKey, height, bend);
+  document.getElementById('bom').innerHTML = buildBOM(height);
+}
+
+function buildSpecsHTML(modeKey,height,bend){
+  const labelMap = {"343":"3 ft – 4 ft – 3 ft", "262":"2 ft – 6 ft – 2 ft", "curve":"Original single bent sheet"};
+  let rows = `
+    <table>
+      <tr><td class="k">Mode</td><td>${labelMap[modeKey]}</td></tr>
+      <tr><td class="k">Interior back-wall width</td><td>90"</td></tr>
+      <tr><td class="k">Outer frame width</td><td>94"</td></tr>
+      <tr><td class="k">Straight side-wall depth</td><td>48"</td></tr>
+      <tr><td class="k">Bow sagitta (full, true curve)</td><td>33.354"</td></tr>
+      <tr><td class="k">Bow radius (as drawn)</td><td>≈47.0"</td></tr>
+      <tr><td class="k">Total front material if one curved sheet</td><td>120" (10 ft)</td></tr>
+      <tr><td class="k">Cage height (set above)</td><td>${height}"</td></tr>
+    </table>`;
+  if(modeKey==='343'){
+    rows += `<h2>3' - 4' - 3' panel breakdown</h2><table>
+      <tr><td class="k">Side shield (x2) — flat length</td><td>36" material → 35.1" chord (basically flat)</td></tr>
+      <tr><td class="k">Center shield — flat chord</td><td>45.95" if left flat</td></tr>
+      <tr><td class="k">Center shield — material length</td><td>48" (standard 4ft sheet width!)</td></tr>
+      <tr><td class="k">Bend needed on center to keep full depth</td><td>~6" bow over 48" — gentle</td></tr>
+      <tr><td class="k">Angle: side panel to back side-wall</td><td>≈39° off vertical</td></tr>
+      <tr><td class="k">Angle: side panel to center panel</td><td>≈129° interior</td></tr>
+    </table>
+    <p class="note">This is the recommended split: the 48" center piece matches a standard 4ft-wide polycarbonate sheet exactly, and it only needs a light ~6" bend (very achievable by hand/clamping, no heat-forming required). The two 36" side shields can be cut perfectly flat from the same stock sheet.</p>`;
+  } else if(modeKey==='262'){
+    rows += `<h2>2' - 6' - 2' panel breakdown</h2><table>
+      <tr><td class="k">Side shield (x2) — flat length</td><td>24" material → 23.8" chord (flat)</td></tr>
+      <tr><td class="k">Center shield — flat chord</td><td>65.2" if left flat</td></tr>
+      <tr><td class="k">Center shield — material length</td><td>72" (6ft-wide stock — less common/pricier)</td></tr>
+      <tr><td class="k">Bend needed on center to keep full depth</td><td>~6.8" bow over 72" — still gentle, but wider sheet to source</td></tr>
+    </table>
+    <p class="note">Bigger uninterrupted center view, but 6ft-wide solid polycarbonate is special-order at most suppliers (standard stock is 48" wide). Structurally and bend-wise it's not much harder than the 3-4-3 split — it's really a sourcing/cost decision.</p>`;
+  } else {
+    rows += `<p class="note">This is the original single-piece bow: one 120" long sheet bent across the full 90" chord with a 33.354" sagitta. Hardest to source/bend/transport — this is what you're replacing.</p>`;
+  }
+  return rows;
+}
+
+function buildBOM(height){
+  const doorH = Math.min(78,height-2);
+  const FRONT_LEN = 120; // total front material length, in
+  const WALL_PERIM_SOLID = 90 + 48*2; // back + 2 sides, in (excludes front/polycarbonate)
+  const FLOOR_FT2 = 45.3; // computed from footprint (rect 90x48 + bow segment)
+  const ROOF_FT2 = 45.3;
+  const wallFt2 = (WALL_PERIM_SOLID*height - DOOR_W*doorH)/144;
+  const totalSheathingFt2 = FLOOR_FT2 + ROOF_FT2 + wallFt2;
+  const PLY_SHEET_FT2_USABLE = 28; // 4x8=32ft2, derate for waste/kerf
+  const plySheets = Math.ceil(totalSheathingFt2/PLY_SHEET_FT2_USABLE);
+
+  const postsFt = 6*height/12; // 6 vertical edges around the 3-panel front + 2 back corners... actually 8 total verticals
+  const postsFtAll = 8*height/12; // back-L, back-R, side-L/bow-L, side-R/bow-R, 2 front joints, = simplify to 8 to include door jambs overlap margin
+  const plateFt = 2*(WALL_PERIM_SOLID+FRONT_LEN)/12; // top + bottom track around full perimeter
+  const doorFrameFt = (2*doorH+DOOR_W)/12;
+  const floorJoistFt = 60; // grid estimate, ~16" o.c. both directions over the footprint
+  const framingTotalFt = postsFtAll + plateFt + doorFrameFt + floorJoistFt;
+  const framingBoards8ft = Math.ceil(framingTotalFt/8);
+
+  const polyFt2 = (FRONT_LEN*height/144);
+
+  return `
+  <table>
+    <tr><td class="k">Cage height used for this estimate</td><td>${height}"</td></tr>
+  </table>
+  <h2>Structure / sheet goods</h2>
+  <table>
+    <tr><td class="k">3/4" plywood (back wall, 2 side walls, floor deck, roof)</td><td><b>${plySheets}</b> sheets, 4x8 (≈${totalSheathingFt2.toFixed(0)} ft² needed)</td></tr>
+    <tr><td class="k">2x3 (or 2x2) framing — corner posts, top/bottom plates, door frame, floor joists</td><td><b>${framingBoards8ft}</b> boards @ 8ft (≈${Math.ceil(framingTotalFt)} linear ft)</td></tr>
+    <tr><td class="k">Mineral wool / rockwool insulation batts</td><td>≈${Math.ceil(FLOOR_FT2)} ft² (fill floor cavity; same as reference build)</td></tr>
+    <tr><td class="k">Acoustic foam pyramid wedge tiles (ceiling)</td><td>≈${Math.ceil(FLOOR_FT2)} ft² coverage — 12"x12" or 24"x24" wedge tiles, adhered to roof underside</td></tr>
+    <tr><td class="k">Foam panel adhesive (spray contact cement)</td><td>2–3 cans, for mounting ceiling foam</td></tr>
+    <tr><td class="k">Clear polycarbonate shields, 3' / 4' / 3' split</td><td>2× 36"×${height}" (flat) + 1× 48"×${height}" (gentle-bend grade) — ≈${polyFt2.toFixed(0)} ft² total, ask supplier to cut to size</td></tr>
+    <tr><td class="k">Polycarbonate thickness</td><td>3/16" recommended (rigid enough flat, still hand-bendable for the center piece)</td></tr>
+  </table>
+  <h2>Door</h2>
+  <table>
+    <tr><td class="k">Door slab</td><td>1× ${DOOR_W}"×${doorH.toFixed(0)}" — cut from plywood offcut, or a lightweight solid-core door</td></tr>
+    <tr><td class="k">Hinges</td><td>3× heavy-duty butt hinges (door takes real-world slamming)</td></tr>
+    <tr><td class="k">Handle / latch</td><td>1× pull handle + 1× latch or barrel bolt (sound-room privacy/closure)</td></tr>
+    <tr><td class="k">Weatherstripping / sound seal gasket</td><td>≈${Math.ceil(2*doorH+DOOR_W)}" around the door frame</td></tr>
+  </table>
+  <h2>Casters &amp; hardware</h2>
+  <table>
+    <tr><td class="k">Locking (brake) casters, heavy-duty</td><td>6× (one per hexagon corner — back-L, back-R, side-R, 2 front panel joints, side-L), sized so total rated load comfortably exceeds cage + kit + drummer weight (e.g. 4" wheel, 250lb+ each)</td></tr>
+    <tr><td class="k">Caster mounting plates/bolts</td><td>included with casters — 6× sets</td></tr>
+    <tr><td class="k">Corner L-brackets / mending plates</td><td>≈20, for post-to-plate and panel-joint reinforcement</td></tr>
+    <tr><td class="k">Wood screws</td><td>1 box 1-5/8", 1 box 3" deck/construction screws</td></tr>
+    <tr><td class="k">Wood glue + construction adhesive</td><td>1 bottle / 1 tube</td></tr>
+    <tr><td class="k">Silicone sealant (clear)</td><td>2–3 tubes, for polycarbonate panel edges/joints</td></tr>
+    <tr><td class="k">Edge banding (plywood edges, optional)</td><td>per linear ft of exposed ply edge</td></tr>
+    <tr><td class="k">Finish (stain/poly or paint, optional)</td><td>1 qt–1 gal depending on look</td></tr>
+  </table>`;
+}
+
+
+function drawPlan(){
+  const svg = document.getElementById('planSvg');
+  const pts343 = splitToPoints([3,4,3]);
+  const backL={x:-45,y:0}, backR={x:45,y:0}, sideL0={x:-45,y:48}, sideR0={x:45,y:48};
+  const scale=4.2, ox=450, oy=480; // origin offset, y flipped (depth downward->upward on screen)
+  const X = x=>ox+x*scale;
+  const Y = y=>oy-y*scale;
+  let s = `<rect width="900" height="520" fill="#181b18"/>`;
+  // perimeter
+  const allPts = [backL,backR,sideR0,...pts343.slice(1,-1).reverse(),sideL0,backL];
+  let path = allPts.map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ');
+  s += `<path d="${path}" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
+  // true curve ghost
+  const curve = curvePoints(28);
+  let cpath = curve.map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ');
+  s += `<path d="${cpath}" fill="none" stroke="#5d6b62" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  // joints + posts
+  allPts.forEach(p=>{ s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="#e8b84b"/>`; });
+  // dimension: back wall 90in
+  s += dim(X(-45),Y(-22),X(45),Y(-22),"90\" back wall");
+  // dimension: side wall depth 48
+  s += `<line x1="${X(-58)}" y1="${Y(0)}" x2="${X(-58)}" y2="${Y(48)}" stroke="#9aa39a" stroke-width="1"/>`;
+  s += `<text x="${X(-70)}" y="${Y(24)}" font-size="13" text-anchor="middle" transform="rotate(-90 ${X(-70)} ${Y(24)})">48" depth</text>`;
+  // dimension: panel lengths
+  function labelSeg(p0,p1,txt){
+    const mx=(X(p0.x)+X(p1.x))/2, my=(Y(p0.y)+Y(p1.y))/2;
+    return `<text x="${mx}" y="${my-8}" font-size="12.5" text-anchor="middle" fill="#bcd6da">${txt}</text>`;
+  }
+  s += labelSeg(sideR0,pts343[1], "3' side\n(flat)");
+  s += `<text x="${(X(sideR0.x)+X(pts343[1].x))/2}" y="${(Y(sideR0.y)+Y(pts343[1].y))/2-8}" font-size="12" text-anchor="middle" fill="#bcd6da">36" flat</text>`;
+  s += `<text x="${(X(pts343[1].x)+X(pts343[2].x))/2}" y="${(Y(pts343[1].y)+Y(pts343[2].y))/2-12}" font-size="12" text-anchor="middle" fill="#bcd6da">48" center (~6" bend)</text>`;
+  s += `<text x="${(X(pts343[2].x)+X(sideL0.x))/2}" y="${(Y(pts343[2].y)+Y(sideL0.y))/2-8}" font-size="12" text-anchor="middle" fill="#bcd6da">36" flat</text>`;
+  // sagitta marker
+  const apex = curve[14];
+  s += `<line x1="${X(0)}" y1="${Y(48)}" x2="${X(0)}" y2="${Y(48+33.354)}" stroke="#9aa39a" stroke-dasharray="3 3"/>`;
+  s += `<text x="${X(6)}" y="${Y(48+33.354/2)}" font-size="11.5" fill="#9aa39a">33.354" true sagitta</text>`;
+  // door (on left wall)
+  const dStart = {x:backL.x, y:backL.y + DOOR_MARGIN};
+  const dEnd = {x:backL.x, y:backL.y + DOOR_MARGIN + 30};
+  s += `<line x1="${X(dStart.x)}" y1="${Y(dStart.y)}" x2="${X(dEnd.x)}" y2="${Y(dEnd.y)}" stroke="#6e5535" stroke-width="5"/>`;
+  // swing arc (door swings inward, hinge at dStart)
+  const swingPts=[]; for(let i=0;i<=12;i++){const ang=(Math.PI/2)*(i/12); swingPts.push({x:dStart.x+30*Math.sin(ang), y:dStart.y+30*Math.cos(ang)});}
+  s += `<path d="${swingPts.map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ')}" fill="none" stroke="#6e5535" stroke-width="1" stroke-dasharray="2 3"/>`;
+  s += `<text x="${X(-62)}" y="${Y(24)}" font-size="11.5" fill="#6e5535" text-anchor="middle">30" door</text>`;
+  // legend
+  s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">— solid gold: 3-4-3 panel outline   ┄ dashed grey: original true curve (ghost reference)</text>`;
+  svg.innerHTML = s;
+}
+
+// ---------- SVG floor plan / joist grid / casters ----------
+function drawFloorPlan(){
+  const svg = document.getElementById('floorSvg');
+  const pts343 = splitToPoints([3,4,3]);
+  const backL={x:-45,y:0}, backR={x:45,y:0}, sideL0={x:-45,y:48}, sideR0={x:45,y:48};
+  const scale=4.2, ox=450, oy=480;
+  const X = x=>ox+x*scale; const Y = y=>oy-y*scale;
+  let s = `<rect width="900" height="520" fill="#181b18"/>`;
+  const allPts = [backL,backR,sideR0,...pts343.slice(1,-1).reverse(),sideL0,backL];
+  let path = allPts.map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ');
+  s += `<clipPath id="floorClip"><path d="${path}"/></clipPath>`;
+  s += `<path d="${path}" fill="#7a5a36" stroke="#e8b84b" stroke-width="2"/>`;
+  // joist grid, ~16in o.c., clipped to the floor outline
+  s += `<g clip-path="url(#floorClip)" stroke="#5d4527" stroke-width="3">`;
+  for(let x=-45;x<=45;x+=16){ s+=`<line x1="${X(x)}" y1="${Y(-5)}" x2="${X(x)}" y2="${Y(85)}"/>`; }
+  for(let y=0;y<=82;y+=16){ s+=`<line x1="${X(-60)}" y1="${Y(y)}" x2="${X(60)}" y2="${Y(y)}"/>`; }
+  // perimeter rim joist
+  s += `<path d="${path}" fill="none" stroke="#5d4527" stroke-width="5"/>`;
+  s += `</g>`;
+  // casters at 6 corners (incl. the 2 front panel joints)
+  [backL,backR,sideR0,pts343[2],pts343[1],sideL0].forEach(p=>{
+    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="9" fill="#111" stroke="#999" stroke-width="2"/>`;
+    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3" fill="#999"/>`;
+  });
+  s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">grid lines = floor joists (≈16" o.c.)   black circles = locking caster wheels</text>`;
+  // dimension callouts re-used
+  s += dim(X(-45),Y(-22),X(45),Y(-22),"90\" back wall");
+  svg.innerHTML = s;
+}
+function dim(x1,y1,x2,y2,label){
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9aa39a" stroke-width="1"/>
+  <text x="${(x1+x2)/2}" y="${y1-6}" font-size="13" text-anchor="middle" fill="#9aa39a">${label}</text>`;
+}
+
+// ---------- wire up controls ----------
+let currentMode='343';
+document.querySelectorAll('button.mode').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('button.mode').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    currentMode = b.dataset.mode;
+    refresh();
+  });
+});
+document.getElementById('heightSlider').addEventListener('input',e=>{
+  document.getElementById('heightVal').textContent = e.target.value+'"';
+  refresh();
+});
+document.getElementById('bendToggle').addEventListener('change', refresh);
+document.getElementById('doorToggle').addEventListener('change', refresh);
+document.getElementById('casterToggle').addEventListener('change', refresh);
+document.getElementById('ceilingToggle').addEventListener('change', refresh);
+
+function refresh(){
+  const h = parseFloat(document.getElementById('heightSlider').value);
+  const bend = document.getElementById('bendToggle').checked;
+  const showDoor = document.getElementById('doorToggle').checked;
+  const showCasters = document.getElementById('casterToggle').checked;
+  const showCeiling = document.getElementById('ceilingToggle').checked;
+  buildScene(currentMode, h, bend, showDoor, showCasters, showCeiling);
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  renderer.render(scene,camera);
+}
+refresh();
+drawPlan();
+drawFloorPlan();
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect = viewerEl.clientWidth/viewerEl.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
+});
+</script>
+</body>
+</html>
