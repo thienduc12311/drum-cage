@@ -179,10 +179,13 @@
     <label style="margin-left:18px;">Cage height:</label>
     <input id="heightSlider" type="range" min="60" max="96" value="80">
     <span id="heightVal">80"</span>
-    <label style="margin-left:18px;"><input type="checkbox" id="bendToggle" > bend center to full depth</label>
+    <label style="margin-left:18px;">Floor thickness:</label>
+    <input id="floorThickSlider" type="range" min="4" max="8" step="0.5" value="5.5">
+    <span id="floorThickVal">5.5"</span>
     <label style="margin-left:18px;"><input type="checkbox" id="doorToggle" checked> show door (left wall)</label>
     <label style="margin-left:18px;"><input type="checkbox" id="casterToggle" checked> show corner wheels</label>
-    <label style="margin-left:18px;"><input type="checkbox" id="ceilingToggle" checked> show roof + foam ceiling</label>
+    <label style="margin-left:18px;"><input type="checkbox" id="ceilingToggle" checked> show lightweight top panel +
+      foam ceiling</label>
   </div>
 
   <div class="layout">
@@ -195,21 +198,54 @@
   <div class="drawing-wrap">
     <h2>Top-down cut/build drawing — 3' - 4' - 3' split (recommended)</h2>
     <svg id="planSvg" viewBox="0 0 900 520" width="100%" height="460"></svg>
-    <p class="note">All dimensions in inches. R = circle radius the original bow was drawn on (≈47"). The two 3ft side
-      shields are essentially flat (only ~0.9" of natural curve over their length — cut them straight). The 4ft center
-      shield is bowed ~6" over its 48" length to keep the booth's full 81.35" depth; if you'd rather it be perfectly
-      flat, depth shrinks to 75.36" at the center (toggle above shows both). Door is set into the left straight side
-      wall, 30" wide.</p>
+    <p class="note">All dimensions in inches. R = circle radius the original bow was drawn on (≈47"). All 3 front
+      shields are cut flat — the two 3ft side shields are essentially flat anyway (only ~0.9" of natural curve over
+      their length), and the 4ft center shield is also left flat rather than bowed, which brings the booth's depth at
+      the center to 75.36" instead of the true 81.35" bow apex. Door is set into the left straight side wall, 30" wide.
+    </p>
   </div>
 
   <div class="drawing-wrap">
     <h2>Floor plan — plywood deck, joist grid &amp; corner casters</h2>
     <svg id="floorSvg" viewBox="0 0 900 520" width="100%" height="460"></svg>
     <p class="note">Joist grid (≈16" o.c.) carries the plywood deck and holds the mineral-wool sound-deadening fill,
-      same idea as your reference build. The floor (and the roof, directly above it) are both cut ~2.5" larger than the
-      wall line all the way around, so they fully cover/cap the frame with a small lip rather than stopping flush at the
-      studs. All 6 hexagon corners now get a locking caster (back-L, back-R, side-R, the 2 front panel joints, side-L)
-      for full support and easy rolling.</p>
+      same idea as your reference build. The floor is cut ~2.5" larger than the wall line all the way around, so it
+      fully covers/caps the frame with a small lip rather than stopping flush at the studs (the top is now a light split
+      plywood cap on 3 stick beams, not a heavy frame — see the framing/top sections below). All 6 hexagon corners now
+      get a locking caster (back-L, back-R, side-R, the 2 front panel joints, side-L) for full support and easy rolling.
+    </p>
+  </div>
+
+  <div class="drawing-wrap">
+    <h2>Detailed floor framing plan — every member dimensioned (deep/heavy, for mass &amp; sound isolation)</h2>
+    <svg id="framingSvg" viewBox="0 0 900 560" width="100%" height="500"></svg>
+    <div id="framingCutlist"></div>
+    <p class="note">This is the structural skeleton under the floor's plywood top deck and bottom skin — a torsion box.
+      Use 2x6 (or deeper, to match the floor-thickness slider above) lumber on edge for the rim and every joist/runner
+      shown, so the finished floor is the full 5–6"+ deep. The top of the cage is intentionally <b>not</b> built this
+      heavy: it's a thin split plywood cap hanging on 3 light stick beams — see the dedicated "Top measurement plan"
+      section below.</p>
+  </div>
+
+  <div class="drawing-wrap">
+    <h2>Back wall framing plan — every measurement, updates with the height slider</h2>
+    <svg id="backWallSvg" viewBox="0 0 800 560" width="100%" height="480"></svg>
+    <div id="backWallCutlist"></div>
+    <p class="note">Standard stud-wall elevation for the 90"-wide back wall: a bottom plate, a top plate, and studs
+      spaced <b>evenly</b> across the full width (6 equal bays, ≈15" each, close to standard 16" o.c. but with no
+      leftover odd bay). This is the wall the plywood skin and any shelving/hardware screw into. The left side wall (48"
+      wide) already divides evenly into 3 equal 16" bays; the right side wall (also 48") is now polycarbonate, so it
+      only needs perimeter framing, not full studs.</p>
+  </div>
+
+  <div class="drawing-wrap">
+    <h2>Top measurement plan — split panel + 3-stick hanging frame</h2>
+    <svg id="topPlanSvg" viewBox="0 0 900 560" width="100%" height="480"></svg>
+    <div id="topPlanCutlist"></div>
+    <p class="note">Top-down view of the lightweight cap: it's cut in half down the centerline (dashed gold line) into a
+      left and right piece, rejoined with 3 splice plates across the seam. The 3 stick beams run side-to-side and rest
+      their ends on the wall top plates (back rectangle gets 2 full-width beams, the front bow gets 1 shorter one) — the
+      panel halves simply lay on top of this little ladder, nothing needs to stand up from the floor.</p>
   </div>
 
   <div class="drawing-wrap" id="bomWrap">
@@ -316,6 +352,7 @@
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
     const plateMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.5, metalness: 0.4 });
     const foamMat = new THREE.MeshStandardMaterial({ color: 0x1c4f78, roughness: 0.55, metalness: 0.05 });
+    const topPanelMat = new THREE.MeshStandardMaterial({ color: 0xe6c9a0, roughness: 0.8, metalness: 0.0, side: THREE.DoubleSide });
     const OVERHANG = 2.5; // in, floor/roof lip beyond the wall line
 
     function offsetPolygon(pts, margin) {
@@ -360,6 +397,47 @@
       }
       return inside;
     }
+    function tube(p0, p1, y, radius, mat, group) {
+      const dx = p1.x - p0.x, dz = p1.y - p0.y, len = Math.hypot(dx, dz);
+      const geo = new THREE.CylinderGeometry(radius, radius, len, 10);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set((p0.x + p1.x) / 2, y, (p0.y + p1.y) / 2);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, 0, dz).normalize());
+      group.add(mesh);
+    }
+    function stick(x, y, h0, h1, radius, mat, group) {
+      const geo = new THREE.CylinderGeometry(radius, radius, h1 - h0, 8);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, (h0 + h1) / 2, y);
+      group.add(mesh);
+    }
+    // lightweight top: a thin plywood cap, split into 2 halves down the centerline (like your reference photo,
+    // with splice plates to rejoin), resting on a few simple support sticks instead of a full frame.
+    function buildLightTop(rimPts, height, group) {
+      const [backL, backR, sideR0, jointR, jointL, sideL0] = rimPts;
+      const crossBack = { x: 0, y: 0 }, crossFront = { x: 0, y: jointL.y };
+      const leftPoly = [crossBack, backL, sideL0, jointL, crossFront];
+      const rightPoly = [crossBack, crossFront, jointR, sideR0, backR];
+      const thickness = 0.6; // thin/light, e.g. 1/4"-3/8" door-skin plywood
+      group.add(buildSlab(leftPoly, height, thickness, topPanelMat));
+      group.add(buildSlab(rightPoly, height, thickness, topPanelMat));
+      // splice plates along the center seam (visual match to your reference photo)
+      [10, 35, 60].forEach(y => {
+        if (y <= jointL.y) {
+          const plate = new THREE.Mesh(new THREE.BoxGeometry(9, 0.3, 2.5), plateMat);
+          plate.position.set(0, height + thickness + 0.2, y);
+          group.add(plate);
+        }
+      });
+      // 3 stick beams spanning side-to-side at ceiling height, forming the frame the panel hangs/rests on
+      // (resting on the wall top plates at their ends — not standing up from the floor)
+      function xRightAt(y) { if (y <= 48) return 45; const f = (y - 48) / (jointL.y - 48); return 45 - f * (45 - jointR.x); }
+      [20, 45, 65].forEach(y => {
+        const xr = xRightAt(y);
+        tube({ x: -xr, y }, { x: xr, y }, height, 0.7, woodMat, group);
+      });
+    }
+
     function buildSlab(shapePts, yBottom, thickness, mat) {
       const shape = new THREE.Shape(shapePts.map(p => new THREE.Vector2(p.x, p.y)));
       const geo = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false });
@@ -442,7 +520,7 @@
       return new THREE.Mesh(geo, mat);
     }
 
-    function buildScene(modeKey, height, bend, showDoor, showCasters, showCeiling) {
+    function buildScene(modeKey, height, showDoor, showCasters, showCeiling, floorThickness) {
       while (rig.children.length) rig.children.pop();
       const front = modes[modeKey]();
 
@@ -454,15 +532,16 @@
       // front[] runs left-to-right (front[0]=left bow end ≈ sideL0, front[last]=right bow end ≈ sideR0)
       // perimeter must run sideR0 -> (front interior points, right-to-left) -> sideL0, so reverse it here
       const shapePts = [backL, backR, sideR0, ...front.slice(1, -1).reverse(), sideL0];
-      // floor/roof get a small overhang lip beyond the wall line, so they fully cover the structure
+      // floor gets a small overhang lip beyond the wall line, so it fully covers the structure
       const overhangPts = offsetPolygon(shapePts, OVERHANG);
 
-      const floor = buildSlab(overhangPts, -3, 3, floorMat);
+      // floor: thick torsion-box style (user wants 5-6" of structural depth, vs the old thin 3" slab)
+      const floor = buildSlab(overhangPts, -floorThickness, floorThickness, floorMat);
       rig.add(floor);
 
       if (showCeiling) {
-        const roof = buildSlab(overhangPts, height, 3, woodMat);
-        rig.add(roof);
+        // top stays light: thin split plywood cap on a few sticks, not a heavy frame
+        buildLightTop(shapePts, height, rig);
         buildFoamCeiling(shapePts, height, rig);
       }
 
@@ -475,7 +554,7 @@
 
       // casters at all 6 hexagon corners (back-L, back-R, side-R, the 2 front panel joints, side-L)
       if (showCasters) {
-        shapePts.forEach(p => addCaster(rig, p, -3));
+        shapePts.forEach(p => addCaster(rig, p, -floorThickness));
       }
 
       // front panels (between sideR0..front[last]..front[0]..sideL0, but front already spans sideR-ish to sideL-ish)
@@ -491,37 +570,11 @@
         rig.add(new THREE.Mesh(new THREE.BoxGeometry(2.5, height, 2.5), frameMat).translateX(p.x).translateY(height / 2).translateZ(p.y));
       });
 
-      // optional bend visual for center panel(s) when not 'curve' mode and bend checked
-      if (modeKey !== 'curve' && bend && front.length >= 4) {
-        // replace middle segment with a gently curved strip (visual only)
-        const segCount = front.length - 1;
-        const midIdx = Math.floor(segCount / 2);
-        const p0 = front[midIdx], p1 = front[midIdx + 1];
-        const segs = modeKey === '343' ? [3, 4, 3] : [2, 6, 2];
-        const midLenIn = segs[1] * 12;
-        const chord = chordLen(p0, p1);
-        // local radius giving this chord/arc-length pair: reuse global R since same physical curve
-        const halfAngle = midLenIn / (2 * R);
-        const n = 10;
-        const mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
-        const dirx = (p1.x - p0.x) / chord, diry = (p1.y - p0.y) / chord;
-        const nx = -diry, ny = dirx; // outward normal (toward +y roughly)
-        const sag = R * (1 - Math.cos(halfAngle));
-        const pts = [];
-        for (let i = 0; i <= n; i++) {
-          const t = i / n; // 0..1 along chord
-          const along = (t - 0.5) * chord;
-          const bulge = sag * (1 - Math.pow(2 * t - 1, 2)); // parabolic approx of arc bulge
-          pts.push({ x: mx + dirx * along + nx * bulge, y: my + diry * along + ny * bulge });
-        }
-        for (let i = 0; i < pts.length - 1; i++) rig.add(quad(pts[i], pts[i + 1], 0, height, polyMat));
-      }
-
-      document.getElementById('specs').innerHTML = buildSpecsHTML(modeKey, height, bend);
-      document.getElementById('bom').innerHTML = buildBOM(height);
+      document.getElementById('specs').innerHTML = buildSpecsHTML(modeKey, height);
+      document.getElementById('bom').innerHTML = buildBOM(height, floorThickness);
     }
 
-    function buildSpecsHTML(modeKey, height, bend) {
+    function buildSpecsHTML(modeKey, height) {
       const labelMap = { "343": "3 ft – 4 ft – 3 ft", "262": "2 ft – 6 ft – 2 ft", "curve": "Original single bent sheet" };
       let rows = `
     <table>
@@ -529,70 +582,90 @@
       <tr><td class="k">Interior back-wall width</td><td>90"</td></tr>
       <tr><td class="k">Outer frame width</td><td>94"</td></tr>
       <tr><td class="k">Straight side-wall depth</td><td>48"</td></tr>
-      <tr><td class="k">Bow sagitta (full, true curve)</td><td>33.354"</td></tr>
-      <tr><td class="k">Bow radius (as drawn)</td><td>≈47.0"</td></tr>
+      <tr><td class="k">Bow sagitta (full, true curve — for reference only, not used since panels are flat)</td><td>33.354"</td></tr>
+      <tr><td class="k">Bow radius (as originally drawn)</td><td>≈47.0"</td></tr>
       <tr><td class="k">Total front material if one curved sheet</td><td>120" (10 ft)</td></tr>
       <tr><td class="k">Cage height (set above)</td><td>${height}"</td></tr>
     </table>`;
       if (modeKey === '343') {
-        rows += `<h2>3' - 4' - 3' panel breakdown</h2><table>
-      <tr><td class="k">Side shield (x2) — flat length</td><td>36" material → 35.1" chord (basically flat)</td></tr>
-      <tr><td class="k">Center shield — flat chord</td><td>45.95" if left flat</td></tr>
-      <tr><td class="k">Center shield — material length</td><td>48" (standard 4ft sheet width!)</td></tr>
-      <tr><td class="k">Bend needed on center to keep full depth</td><td>~6" bow over 48" — gentle</td></tr>
+        rows += `<h2>3' - 4' - 3' panel breakdown (all flat — no bending)</h2><table>
+      <tr><td class="k">Side shield (x2) — flat chord</td><td>35.1" (cut from 36" material)</td></tr>
+      <tr><td class="k">Center shield — flat chord</td><td>45.95" (cut from 48" material — standard 4ft sheet width!)</td></tr>
+      <tr><td class="k">Resulting front depth</td><td>75.36" (slightly less than the true 81.35" bow apex, since all 3 panels are flat chords)</td></tr>
       <tr><td class="k">Angle: side panel to back side-wall</td><td>≈39° off vertical</td></tr>
       <tr><td class="k">Angle: side panel to center panel</td><td>≈129° interior</td></tr>
     </table>
-    <p class="note">This is the recommended split: the 48" center piece matches a standard 4ft-wide polycarbonate sheet exactly, and it only needs a light ~6" bend (very achievable by hand/clamping, no heat-forming required). The two 36" side shields can be cut perfectly flat from the same stock sheet.</p>`;
+    <p class="note">This is the recommended split: every shield is cut perfectly flat, no bending or heat-forming needed anywhere. The 48" center piece matches a standard 4ft-wide polycarbonate sheet exactly.</p>`;
       } else if (modeKey === '262') {
-        rows += `<h2>2' - 6' - 2' panel breakdown</h2><table>
-      <tr><td class="k">Side shield (x2) — flat length</td><td>24" material → 23.8" chord (flat)</td></tr>
-      <tr><td class="k">Center shield — flat chord</td><td>65.2" if left flat</td></tr>
-      <tr><td class="k">Center shield — material length</td><td>72" (6ft-wide stock — less common/pricier)</td></tr>
-      <tr><td class="k">Bend needed on center to keep full depth</td><td>~6.8" bow over 72" — still gentle, but wider sheet to source</td></tr>
+        rows += `<h2>2' - 6' - 2' panel breakdown (all flat — no bending)</h2><table>
+      <tr><td class="k">Side shield (x2) — flat chord</td><td>23.8" (cut from 24" material)</td></tr>
+      <tr><td class="k">Center shield — flat chord</td><td>65.2" (cut from 72" material — 6ft-wide stock, less common/pricier)</td></tr>
     </table>
-    <p class="note">Bigger uninterrupted center view, but 6ft-wide solid polycarbonate is special-order at most suppliers (standard stock is 48" wide). Structurally and bend-wise it's not much harder than the 3-4-3 split — it's really a sourcing/cost decision.</p>`;
+    <p class="note">Bigger uninterrupted center view, and still no bending needed — but the 72"-wide center sheet is special-order at most suppliers (standard stock is 48" wide), so it's really a sourcing/cost decision vs the 3-4-3 split.</p>`;
       } else {
         rows += `<p class="note">This is the original single-piece bow: one 120" long sheet bent across the full 90" chord with a 33.354" sagitta. Hardest to source/bend/transport — this is what you're replacing.</p>`;
       }
       return rows;
     }
 
-    function buildBOM(height) {
+    function buildBOM(height, floorThickness) {
       const doorH = Math.min(78, height - 2);
       const FRONT_LEN = 120; // total front material length, in
       const POLY_WALL_LEN = 48; // right side wall, now polycarbonate too
       const SOLID_WALL_PERIM = 90 + 48; // back + left side wall only (right side wall is now poly), in
       const FLOOR_FT2 = 45.3; // computed from footprint (rect 90x48 + bow segment)
-      const ROOF_FT2 = 45.3;
       const wallFt2 = (SOLID_WALL_PERIM * height - DOOR_W * doorH) / 144;
-      const totalSheathingFt2 = FLOOR_FT2 + ROOF_FT2 + wallFt2;
+      // floor is now a thick torsion box: top deck + bottom skin, both plywood. No roof plywood anymore (top is aluminum).
+      const totalSheathingFt2 = 2 * FLOOR_FT2 + wallFt2;
       const PLY_SHEET_FT2_USABLE = 28; // 4x8=32ft2, derate for waste/kerf
       const plySheets = Math.ceil(totalSheathingFt2 / PLY_SHEET_FT2_USABLE);
 
-      const postsFt = 6 * height / 12; // 6 vertical edges around the 3-panel front + 2 back corners... actually 8 total verticals
-      const postsFtAll = 8 * height / 12; // back-L, back-R, side-L/bow-L, side-R/bow-R, 2 front joints, = simplify to 8 to include door jambs overlap margin
+      // wall/door framing — small dimension lumber (2x3/2x2), unaffected by floor thickness
+      const postsFtAll = 8 * height / 12; // 6 wall-front verticals + 2 extra for door jamb overlap margin
       const plateFt = 2 * (SOLID_WALL_PERIM + POLY_WALL_LEN + FRONT_LEN) / 12; // top + bottom track around full perimeter
       const doorFrameFt = (2 * doorH + DOOR_W) / 12;
-      const floorJoistFt = 60; // grid estimate, ~16" o.c. both directions over the footprint
-      const framingTotalFt = postsFtAll + plateFt + doorFrameFt + floorJoistFt;
-      const framingBoards8ft = Math.ceil(framingTotalFt / 8);
+      const wallFramingTotalFt = postsFtAll + plateFt + doorFrameFt;
+      const wallFramingBoards8ft = Math.ceil(wallFramingTotalFt / 8);
+
+      // floor framing — deep lumber sized to the chosen floor thickness, built ONCE (the floor only; the top is aluminum now)
+      const rimSumFt = 25.2;   // perimeter rim (6 mitered segments), from the framing plan
+      const joistSumFt = 45.3; // 4 cross joists + 3 longitudinal members, from the framing plan
+      const floorFramingTotalFt = rimSumFt + joistSumFt;
+      const floorFramingBoards8ft = Math.ceil(floorFramingTotalFt / 8);
+      const lumberSize = floorThickness <= 3.5 ? '2x4 (3.5" actual)' : floorThickness <= 5.5 ? '2x6 (5.5" actual)' : floorThickness <= 7.25 ? '2x8 (7.25" actual)' : '2x10 (9.25" actual)';
+
+      // lightweight split top panel (thin plywood, cut in half down the centerline) + a few support sticks
+      const TOP_FT2 = 45.3; // same footprint as the floor/foam coverage
+      const stickLenFt = (90 + 90 + 62.62) / 12; // 3 cross-beam sticks at y=20",45",65", spanning side-to-side at ceiling height
 
       const polyFt2 = ((FRONT_LEN + POLY_WALL_LEN) * height / 144);
 
       return `
   <table>
     <tr><td class="k">Cage height used for this estimate</td><td>${height}"</td></tr>
+    <tr><td class="k">Floor thickness used for this estimate</td><td>${floorThickness}"</td></tr>
   </table>
-  <h2>Structure / sheet goods</h2>
+  <h2>Floor — thick torsion-box base (5–6"+ deep, for mass/sound isolation)</h2>
   <table>
-    <tr><td class="k">3/4" plywood (back wall, left side wall, floor deck, roof)</td><td><b>${plySheets}</b> sheets, 4x8 (≈${totalSheathingFt2.toFixed(0)} ft² needed)</td></tr>
-    <tr><td class="k">2x3 (or 2x2) framing — corner posts, top/bottom plates, door frame, floor joists</td><td><b>${framingBoards8ft}</b> boards @ 8ft (≈${Math.ceil(framingTotalFt)} linear ft)</td></tr>
-    <tr><td class="k">Mineral wool / rockwool insulation batts</td><td>≈${Math.ceil(FLOOR_FT2)} ft² (fill floor cavity; same as reference build)</td></tr>
-    <tr><td class="k">Acoustic foam pyramid wedge tiles (ceiling)</td><td>≈${Math.ceil(FLOOR_FT2)} ft² coverage — 12"x12" or 24"x24" wedge tiles, adhered to roof underside</td></tr>
-    <tr><td class="k">Foam panel adhesive (spray contact cement)</td><td>2–3 cans, for mounting ceiling foam</td></tr>
-    <tr><td class="k">Clear polycarbonate — 3' / 4' / 3' front split + right side wall</td><td>2× 36"×${height}" (flat) + 1× 48"×${height}" (gentle-bend) + 1× 48"×${height}" (flat, right wall) — ≈${polyFt2.toFixed(0)} ft² total, ask supplier to cut to size</td></tr>
-    <tr><td class="k">Polycarbonate thickness</td><td>3/16" recommended (rigid enough flat, still hand-bendable for the center front piece)</td></tr>
+    <tr><td class="k">Floor framing lumber</td><td><b>${lumberSize}</b>, ${floorFramingBoards8ft} boards @ 8ft (≈${floorFramingTotalFt.toFixed(0)} linear ft — rim ${rimSumFt}ft + joists/runners ${joistSumFt}ft, see framing plan)</td></tr>
+    <tr><td class="k">3/4" plywood — top deck + bottom skin</td><td>part of the ${plySheets}-sheet total below; ≈${(2 * FLOOR_FT2).toFixed(0)} ft² just for the floor's two skins</td></tr>
+    <tr><td class="k">Mineral wool / rockwool insulation</td><td>fills the ${floorThickness}"-deep cavity between top/bottom skins, ≈${Math.ceil(FLOOR_FT2)} ft² coverage</td></tr>
+    <tr><td class="k">Construction adhesive + screws (skins to frame)</td><td>1 tube + 1 box 1-1/4" screws</td></tr>
+  </table>
+  <h2>Top — lightweight split panel (no heavy frame, just a thin cap on a few sticks)</h2>
+  <table>
+    <tr><td class="k">Lightweight plywood/door-skin panel, cut in 2 halves down the centerline</td><td>≈${Math.ceil(TOP_FT2)} ft² total, 1/4"–3/8" thick (like the panel in your reference photo)</td></tr>
+    <tr><td class="k">Splice plates to rejoin the 2 halves</td><td>3, screwed/bolted across the center seam (same idea as your reference photo)</td></tr>
+    <tr><td class="k">Stick frame (3 cross-beams the panel hangs/rests on)</td><td>3× light stick (1"x2" or similar), spanning side-to-side at ceiling height — lengths 90", 90", 62.6" (≈${stickLenFt.toFixed(1)} linear ft total). Ends rest on the wall top plates — nothing stands up from the floor.</td></tr>
+    <tr><td class="k">Acoustic foam pyramid wedge tiles</td><td>≈${Math.ceil(FLOOR_FT2)} ft² coverage — 12"x12" or 24"x24" tiles, glued straight to the underside of the panel</td></tr>
+    <tr><td class="k">Foam panel adhesive (spray contact cement)</td><td>2–3 cans</td></tr>
+  </table>
+  <h2>Walls — sheet goods &amp; framing</h2>
+  <table>
+    <tr><td class="k">3/4" plywood total (back wall, left side wall, + floor's 2 skins)</td><td><b>${plySheets}</b> sheets, 4x8 (≈${totalSheathingFt2.toFixed(0)} ft² needed)</td></tr>
+    <tr><td class="k">2x3 (or 2x2) framing — wall posts, top/bottom plates, door frame</td><td><b>${wallFramingBoards8ft}</b> boards @ 8ft (≈${Math.ceil(wallFramingTotalFt)} linear ft)</td></tr>
+    <tr><td class="k">Clear polycarbonate — 3' / 4' / 3' front split + right side wall</td><td>2× 36"×${height}" (flat) + 1× 48"×${height}" (flat) + 1× 48"×${height}" (flat, right wall) — ≈${polyFt2.toFixed(0)} ft² total, ask supplier to cut to size</td></tr>
+    <tr><td class="k">Polycarbonate thickness</td><td>3/16" recommended (rigid, all 4 shields are cut and installed flat)</td></tr>
   </table>
   <h2>Door</h2>
   <table>
@@ -614,6 +687,153 @@
   </table>`;
     }
 
+    // ---------- Detailed framing plan (base = roof, identical) ----------
+    function drawFramingPlan() {
+      const svg = document.getElementById('framingSvg');
+      const pts343 = splitToPoints([3, 4, 3]);
+      const backL = { x: -45, y: 0 }, backR = { x: 45, y: 0 }, sideL0 = { x: -45, y: 48 }, sideR0 = { x: 45, y: 48 };
+      const jointL = pts343[1], jointR = pts343[2]; // {x:-22.98,y:75.36}, {x:22.97,y:75.36}
+      const scale = 4.6, ox = 450, oy = 520;
+      const X = x => ox + x * scale; const Y = y => oy - y * scale;
+
+      const rim = [backL, backR, sideR0, jointR, jointL, sideL0];
+      const rimLens = rim.map((p, i) => chordLen(p, rim[(i + 1) % rim.length]));
+      const rimAngles = [90, 90, 141.2, 128.8, 128.8, 141.2]; // interior angle at backL,backR,sideR0,jointR,jointL,sideL0
+
+      function xRightAt(y) { if (y <= 48) return 45; const f = (y - 48) / (75.36 - 48); return 45 - f * (45 - jointR.x); }
+      const rows = [16, 32, 48, 64].map(y => ({ y, xL: -xRightAt(y), xR: xRightAt(y) }));
+      function maxYAtX(x) { if (Math.abs(x) <= jointR.x) return 75.36; const f = (45 - Math.abs(x)) / (45 - jointR.x); return 48 + f * (75.36 - 48); }
+      const cols = [-30, 0, 30].map(x => ({ x, yMax: maxYAtX(x) }));
+
+      let s = `<rect width="900" height="560" fill="#181b18"/>`;
+      let rimPath = rim.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.x)},${Y(p.y)}`).join(' ') + ' Z';
+      s += `<path d="${rimPath}" fill="none" stroke="#e8b84b" stroke-width="4"/>`;
+      rim.forEach((p, i) => {
+        const p2 = rim[(i + 1) % rim.length];
+        const mx = (p.x + p2.x) / 2, my = (p.y + p2.y) / 2;
+        const dx = p2.x - p.x, dy = p2.y - p.y, len = Math.hypot(dx, dy);
+        const nx = -dy / len, ny = dx / len;
+        const ox2 = mx + nx * 7, oy2 = my + ny * 7;
+        s += `<text x="${X(ox2)}" y="${Y(oy2)}" font-size="12.5" fill="#e8b84b" text-anchor="middle">${rimLens[i].toFixed(1)}"</text>`;
+      });
+      rim.forEach((p, i) => {
+        s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="#fff"/>`;
+        s += `<text x="${X(p.x)}" y="${Y(p.y) + (p.y < 40 ? -12 : 18)}" font-size="11.5" fill="#9aa39a" text-anchor="middle">${rimAngles[i]}°</text>`;
+      });
+      rows.forEach(r => {
+        s += `<line x1="${X(r.xL)}" y1="${Y(r.y)}" x2="${X(r.xR)}" y2="${Y(r.y)}" stroke="#5d4527" stroke-width="5"/>`;
+        s += `<text x="${X(r.xR) + 10}" y="${Y(r.y) + 4}" font-size="11.5" fill="#bcd6da" text-anchor="start">y=${r.y}": ${(r.xR - r.xL).toFixed(1)}" long</text>`;
+      });
+      cols.forEach(c => {
+        s += `<line x1="${X(c.x)}" y1="${Y(0)}" x2="${X(c.x)}" y2="${Y(c.yMax)}" stroke="#7a5a36" stroke-width="5"/>`;
+        s += `<text x="${X(c.x)}" y="${Y(c.yMax) - 10}" font-size="11.5" fill="#c9a876" text-anchor="middle">x=${c.x}": ${c.yMax.toFixed(1)}" long</text>`;
+      });
+      s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">gold = perimeter rim (mitered)   dark brown = cross joists (parallel to back wall)   light brown = longitudinal members (front-to-back)</text>`;
+      svg.innerHTML = s;
+
+      let html = `<table><tr><td class="k">Member</td><td>Qty</td><td>Length</td><td>Notes</td></tr>`;
+      const rimNames = ["Back wall rim", "Right side rim", "Right shield rim", "Center shield rim", "Left shield rim", "Left side rim"];
+      rim.forEach((p, i) => {
+        html += `<tr><td class="k">${rimNames[i]}</td><td>1</td><td>${rimLens[i].toFixed(1)}"</td><td>miter both ends to ${(180 - rimAngles[i]).toFixed(1)}° off straight, interior angle ${rimAngles[i]}° — use lumber on edge matching your floor-thickness setting</td></tr>`;
+      });
+      rows.forEach(r => {
+        html += `<tr><td class="k">Cross joist @ ${r.y}" from back</td><td>1</td><td>${(r.xR - r.xL).toFixed(1)}"</td><td>square cut, parallel to back wall</td></tr>`;
+      });
+      cols.forEach(c => {
+        html += `<tr><td class="k">Longitudinal @ x=${c.x}"</td><td>1</td><td>${c.yMax.toFixed(1)}"</td><td>runs from back rim toward front, trimmed to where it meets the rim</td></tr>`;
+      });
+      html += `<tr><td class="k">Caster blocking</td><td>6 (one per corner)</td><td>~6"×6" pad</td><td>doubled-up blocking under each of the 6 corners for caster screws</td></tr>`;
+      html += `</table>`;
+      document.getElementById('framingCutlist').innerHTML = html;
+    }
+
+    // ---------- Back wall framing elevation (height-dependent, redrawn on refresh) ----------
+    function drawBackWallFraming(height) {
+      const svg = document.getElementById('backWallSvg');
+      if (!svg) return;
+      const W = 90, plateT = 1.5, studH = height - 2 * plateT;
+      // equal division: pick the number of bays that gets closest to 16" o.c., then space evenly (no leftover odd bay)
+      const targetSpacing = 16;
+      const bays = Math.round(W / targetSpacing);
+      const spacing = W / bays;
+      const studXs = []; for (let i = 0; i <= bays; i++) studXs.push(i * spacing);
+
+      const scale = 7, ox = 70, oy = 520;
+      const X = x => ox + x * scale, Y = y => oy - y * scale;
+
+      let s = `<rect width="800" height="560" fill="#181b18"/>`;
+      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * scale}" height="${height * scale}" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
+      s += `<rect x="${X(0)}" y="${Y(plateT)}" width="${W * scale}" height="${plateT * scale}" fill="#7a5a36" stroke="#5d4527"/>`;
+      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * scale}" height="${plateT * scale}" fill="#7a5a36" stroke="#5d4527"/>`;
+      studXs.forEach(x => {
+        s += `<rect x="${X(x) - 3}" y="${Y(height - plateT)}" width="6" height="${studH * scale}" fill="#c9a876" stroke="#5d4527"/>`;
+        s += `<text x="${X(x)}" y="${Y(0) + 16}" font-size="10" fill="#bcd6da" text-anchor="middle">${x}"</text>`;
+      });
+      for (let i = 0; i < studXs.length - 1; i++) {
+        const mx = (studXs[i] + studXs[i + 1]) / 2;
+        s += `<text x="${X(mx)}" y="${Y(height) - 8}" font-size="10.5" fill="#9aa39a" text-anchor="middle">${(studXs[i + 1] - studXs[i]).toFixed(1)}"</text>`;
+      }
+      s += `<text x="${X(W / 2)}" y="${Y(height) - 26}" font-size="13" fill="#e8b84b" text-anchor="middle">90" wide</text>`;
+      s += `<text x="${X(0) - 40}" y="${Y(height / 2)}" font-size="13" fill="#e8b84b" text-anchor="middle" transform="rotate(-90 ${X(0) - 40} ${Y(height / 2)})">${height}" tall</text>`;
+      s += `<text x="${X(W) + 10}" y="${Y(height - plateT / 2) + 4}" font-size="10.5" fill="#bcd6da">${plateT}" top plate</text>`;
+      s += `<text x="${X(W) + 10}" y="${Y(plateT / 2) + 4}" font-size="10.5" fill="#bcd6da">${plateT}" bottom plate</text>`;
+      s += `<text x="${X(W) + 10}" y="${Y(height / 2)}" font-size="10.5" fill="#c9a876">stud: ${studH.toFixed(1)}" long</text>`;
+      svg.innerHTML = s;
+
+      const html = `<table><tr><td class="k">Member</td><td>Qty</td><td>Length</td><td>Notes</td></tr>
+    <tr><td class="k">Bottom plate</td><td>1</td><td>90"</td><td>flat 2x lumber, screwed to the floor rim</td></tr>
+    <tr><td class="k">Top plate</td><td>1</td><td>90"</td><td>flat 2x lumber, carries the light top panel's back edge</td></tr>
+    <tr><td class="k">Studs</td><td>${studXs.length}</td><td>${studH.toFixed(1)}" each</td><td>${bays} equal bays of ${spacing.toFixed(1)}" o.c., at x = ${studXs.map(x => x.toFixed(1) + '"').join(', ')} from the left corner — no leftover odd bay</td></tr>
+  </table>`;
+      document.getElementById('backWallCutlist').innerHTML = html;
+    }
+
+    // ---------- Top measurement plan (split panel + 3-stick hanging frame) ----------
+    function drawTopPlan() {
+      const svg = document.getElementById('topPlanSvg');
+      const pts343 = splitToPoints([3, 4, 3]);
+      const backL = { x: -45, y: 0 }, backR = { x: 45, y: 0 }, sideL0 = { x: -45, y: 48 }, sideR0 = { x: 45, y: 48 };
+      const jointL = pts343[1], jointR = pts343[2];
+      const scale = 4.6, ox = 450, oy = 520;
+      const X = x => ox + x * scale, Y = y => oy - y * scale;
+
+      const rim = [backL, backR, sideR0, jointR, jointL, sideL0];
+      function xRightAt(y) { if (y <= 48) return 45; const f = (y - 48) / (jointL.y - 48); return 45 - f * (45 - jointR.x); }
+      const beams = [20, 45, 65].map(y => ({ y, xr: xRightAt(y) }));
+
+      let s = `<rect width="900" height="560" fill="#181b18"/>`;
+      let rimPath = rim.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.x)},${Y(p.y)}`).join(' ') + ' Z';
+      s += `<path d="${rimPath}" fill="#e6c9a0" fill-opacity="0.15" stroke="#e8b84b" stroke-width="3"/>`;
+      // centerline seam (dashed)
+      s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(jointL.y)}" stroke="#e8b84b" stroke-width="2" stroke-dasharray="6 4"/>`;
+      // splice plates
+      [10, 35, 60].forEach(y => {
+        s += `<rect x="${X(-4.5)}" y="${Y(y) - 2}" width="${9 * scale}" height="4" fill="#999" stroke="#555"/>`;
+        s += `<text x="${X(6)}" y="${Y(y) + 4}" font-size="10.5" fill="#bcd6da">splice @ ${y}"</text>`;
+      });
+      // beams
+      beams.forEach(b => {
+        s += `<line x1="${X(-b.xr)}" y1="${Y(b.y)}" x2="${X(b.xr)}" y2="${Y(b.y)}" stroke="#7a5a36" stroke-width="6"/>`;
+        s += `<text x="${X(b.xr) + 8}" y="${Y(b.y) + 4}" font-size="11.5" fill="#c9a876">y=${b.y}": ${(2 * b.xr).toFixed(1)}" long</text>`;
+      });
+      // half labels
+      s += `<text x="${X(-25)}" y="${Y(60)}" font-size="13" fill="#e8b84b" text-anchor="middle">LEFT half</text>`;
+      s += `<text x="${X(-25)}" y="${Y(60) - 16}" font-size="11.5" fill="#bcd6da" text-anchor="middle">≈22.6 ft²</text>`;
+      s += `<text x="${X(25)}" y="${Y(60)}" font-size="13" fill="#e8b84b" text-anchor="middle">RIGHT half</text>`;
+      s += `<text x="${X(25)}" y="${Y(60) - 16}" font-size="11.5" fill="#bcd6da" text-anchor="middle">≈22.6 ft²</text>`;
+      s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">gold outline = panel footprint   dashed = center seam   grey bars = splice plates   brown = the 3 stick beams</text>`;
+      svg.innerHTML = s;
+
+      let html = `<table><tr><td class="k">Item</td><td>Qty</td><td>Size</td><td>Notes</td></tr>
+    <tr><td class="k">Top panel, left half</td><td>1</td><td>≈22.6 ft² (45" back edge tapering to the seam)</td><td>1/4"–3/8" lightweight plywood/door-skin</td></tr>
+    <tr><td class="k">Top panel, right half</td><td>1</td><td>≈22.6 ft² (mirror of left)</td><td>same material</td></tr>
+    <tr><td class="k">Splice plates</td><td>3</td><td>~9"x2.5"</td><td>at 10", 35", 60" from the back wall, bolted/screwed across the seam</td></tr>`;
+      beams.forEach(b => {
+        html += `<tr><td class="k">Stick beam @ y=${b.y}" from back</td><td>1</td><td>${(2 * b.xr).toFixed(1)}"</td><td>rests on the wall top plates at both ends</td></tr>`;
+      });
+      html += `</table>`;
+      document.getElementById('topPlanCutlist').innerHTML = html;
+    }
 
     function drawPlan() {
       const svg = document.getElementById('planSvg');
@@ -645,7 +865,7 @@
       }
       s += labelSeg(sideR0, pts343[1], "3' side\n(flat)");
       s += `<text x="${(X(sideR0.x) + X(pts343[1].x)) / 2}" y="${(Y(sideR0.y) + Y(pts343[1].y)) / 2 - 8}" font-size="12" text-anchor="middle" fill="#bcd6da">36" flat</text>`;
-      s += `<text x="${(X(pts343[1].x) + X(pts343[2].x)) / 2}" y="${(Y(pts343[1].y) + Y(pts343[2].y)) / 2 - 12}" font-size="12" text-anchor="middle" fill="#bcd6da">48" center (~6" bend)</text>`;
+      s += `<text x="${(X(pts343[1].x) + X(pts343[2].x)) / 2}" y="${(Y(pts343[1].y) + Y(pts343[2].y)) / 2 - 12}" font-size="12" text-anchor="middle" fill="#bcd6da">48" center (flat)</text>`;
       s += `<text x="${(X(pts343[2].x) + X(sideL0.x)) / 2}" y="${(Y(pts343[2].y) + Y(sideL0.y)) / 2 - 8}" font-size="12" text-anchor="middle" fill="#bcd6da">36" flat</text>`;
       // sagitta marker
       const apex = curve[14];
@@ -712,18 +932,22 @@
       document.getElementById('heightVal').textContent = e.target.value + '"';
       refresh();
     });
-    document.getElementById('bendToggle').addEventListener('change', refresh);
+    document.getElementById('floorThickSlider').addEventListener('input', e => {
+      document.getElementById('floorThickVal').textContent = e.target.value + '"';
+      refresh();
+    });
     document.getElementById('doorToggle').addEventListener('change', refresh);
     document.getElementById('casterToggle').addEventListener('change', refresh);
     document.getElementById('ceilingToggle').addEventListener('change', refresh);
 
     function refresh() {
       const h = parseFloat(document.getElementById('heightSlider').value);
-      const bend = document.getElementById('bendToggle').checked;
       const showDoor = document.getElementById('doorToggle').checked;
       const showCasters = document.getElementById('casterToggle').checked;
       const showCeiling = document.getElementById('ceilingToggle').checked;
-      buildScene(currentMode, h, bend, showDoor, showCasters, showCeiling);
+      const floorThickness = parseFloat(document.getElementById('floorThickSlider').value);
+      buildScene(currentMode, h, showDoor, showCasters, showCeiling, floorThickness);
+      drawBackWallFraming(h);
     }
 
     function animate() {
@@ -733,6 +957,8 @@
     refresh();
     drawPlan();
     drawFloorPlan();
+    drawFramingPlan();
+    drawTopPlan();
     animate();
 
     window.addEventListener('resize', () => {
