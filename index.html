@@ -1,494 +1,656 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Drum Cage — 3-Panel Front Design</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<style>
-  :root{
-    --bg:#1b1f1d; --panel:#232825; --wood:#c9a876; --wood-dark:#8a6a42;
-    --poly:#bcd6da; --accent:#e8b84b; --line:#3a4039; --text:#eee7d8; --muted:#9aa39a;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;}
-  header{padding:18px 24px 8px;border-bottom:1px solid var(--line);}
-  h1{font-size:20px;margin:0 0 4px;letter-spacing:.5px;color:var(--accent);}
-  .sub{color:var(--muted);font-size:13px;}
-  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--panel);}
-  .controls label{font-size:12px;color:var(--muted);margin-right:6px;}
-  button.mode{background:#2c3329;color:var(--text);border:1px solid var(--line);padding:7px 12px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:3px;}
-  button.mode.active{background:var(--accent);color:#1b1f1d;border-color:var(--accent);font-weight:bold;}
-  input[type=range]{width:140px;}
-  .layout{display:flex;flex-wrap:wrap;gap:0;}
-  #viewer{width:100%;max-width:780px;height:520px;background:radial-gradient(circle at 50% 30%,#262b27,#151815);position:relative;}
-  #specs{flex:1;min-width:300px;padding:18px 22px;font-size:12.5px;line-height:1.6;color:var(--text);}
-  #specs h2{font-size:14px;color:var(--accent);margin:14px 0 6px;}
-  #specs table{border-collapse:collapse;width:100%;margin-bottom:6px;}
-  #specs td{padding:2px 6px 2px 0;border-bottom:1px solid var(--line);}
-  #specs td.k{color:var(--muted);width:60%;}
-  .note{color:var(--muted);font-size:11.5px;border-left:2px solid var(--accent);padding-left:8px;margin:8px 0;}
-  .drawing-wrap{padding:24px;border-top:1px solid var(--line);background:#181b18;}
-  .drawing-wrap h2{color:var(--accent);font-size:15px;margin-top:0;}
-  svg text{fill:var(--text);font-family:'Courier New',monospace;}
-  .hint{position:absolute;bottom:8px;left:12px;font-size:11px;color:var(--muted);}
-</style>
+  <meta charset="UTF-8">
+  <title>Drum Cage — 3-Panel Front Design</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root {
+      --bg: #1b1f1d;
+      --panel: #232825;
+      --wood: #c9a876;
+      --wood-dark: #8a6a42;
+      --poly: #bcd6da;
+      --accent: #e8b84b;
+      --line: #3a4039;
+      --text: #eee7d8;
+      --muted: #9aa39a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+    }
+
+    header {
+      padding: 18px 24px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0 0 4px;
+      letter-spacing: .5px;
+      color: var(--accent);
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .controls label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: 6px;
+    }
+
+    button.mode {
+      background: #2c3329;
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 7px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    button.mode.active {
+      background: var(--accent);
+      color: #1b1f1d;
+      border-color: var(--accent);
+      font-weight: bold;
+    }
+
+    input[type=range] {
+      width: 140px;
+    }
+
+    .layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    #viewer {
+      width: 100%;
+      max-width: 780px;
+      height: 520px;
+      background: radial-gradient(circle at 50% 30%, #262b27, #151815);
+      position: relative;
+    }
+
+    #specs {
+      flex: 1;
+      min-width: 300px;
+      padding: 18px 22px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    #specs h2 {
+      font-size: 14px;
+      color: var(--accent);
+      margin: 14px 0 6px;
+    }
+
+    #specs table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 6px;
+    }
+
+    #specs td {
+      padding: 2px 6px 2px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    #specs td.k {
+      color: var(--muted);
+      width: 60%;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 11.5px;
+      border-left: 2px solid var(--accent);
+      padding-left: 8px;
+      margin: 8px 0;
+    }
+
+    .drawing-wrap {
+      padding: 24px;
+      border-top: 1px solid var(--line);
+      background: #181b18;
+    }
+
+    .drawing-wrap h2 {
+      color: var(--accent);
+      font-size: 15px;
+      margin-top: 0;
+    }
+
+    svg text {
+      fill: var(--text);
+      font-family: 'Courier New', monospace;
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+  </style>
 </head>
+
 <body>
-<header>
-  <h1>Drum Cage — Split-Panel Front Redesign</h1>
-  <div class="sub">Original: one 120" (10ft) bent polycarbonate sheet, R≈47", over a 90" wide / 33.35" deep bow. Modified: same bow broken into 3 straight-ish shields.</div>
-</header>
+  <header>
+    <h1>Drum Cage — Split-Panel Front Redesign</h1>
+    <div class="sub">Original: one 120" (10ft) bent polycarbonate sheet, R≈47", over a 90" wide / 33.35" deep bow.
+      Modified: same bow broken into 3 straight-ish shields.</div>
+  </header>
 
-<div class="controls">
-  <label>Front split:</label>
-  <button class="mode active" data-mode="343">3 - 4 - 3 ft (recommended)</button>
-  <button class="mode" data-mode="262">2 - 6 - 2 ft (alt, needs wide stock)</button>
-  <button class="mode" data-mode="curve">Original single curve</button>
-  <label style="margin-left:18px;">Cage height:</label>
-  <input id="heightSlider" type="range" min="60" max="96" value="80">
-  <span id="heightVal">80"</span>
-  <label style="margin-left:18px;">Floor thickness:</label>
-  <input id="floorThickSlider" type="range" min="4" max="8" step="0.5" value="5.5">
-  <span id="floorThickVal">5.5"</span>
-  <label style="margin-left:18px;"><input type="checkbox" id="doorToggle" checked> show door (right wall, poly)</label>
-  <label style="margin-left:18px;">Door width:</label>
-  <select id="doorWidthSelect" style="background:#2c3329;color:#eee7d8;border:1px solid #3a4039;padding:4px 8px;font-family:inherit;font-size:12px;border-radius:3px;">
-    <option value="24">24"</option>
-    <option value="28" selected>28"</option>
-  </select>
-  <label style="margin-left:18px;"><input type="checkbox" id="casterToggle" checked> show corner wheels</label>
-  <label style="margin-left:18px;"><input type="checkbox" id="ceilingToggle" checked> show lightweight top panel + foam ceiling</label>
-</div>
+  <div class="controls">
+    <label>Front split:</label>
+    <button class="mode active" data-mode="343">3 - 4 - 3 ft (recommended)</button>
+    <button class="mode" data-mode="262">2 - 6 - 2 ft (alt, needs wide stock)</button>
+    <button class="mode" data-mode="curve">Original single curve</button>
+    <label style="margin-left:18px;">Cage height:</label>
+    <input id="heightSlider" type="range" min="60" max="96" value="80">
+    <span id="heightVal">80"</span>
+    <label style="margin-left:18px;">Floor thickness:</label>
+    <input id="floorThickSlider" type="range" min="4" max="8" step="0.5" value="5.5">
+    <span id="floorThickVal">5.5"</span>
+    <label style="margin-left:18px;"><input type="checkbox" id="doorToggle" checked> show door (right wall,
+      poly)</label>
+    <label style="margin-left:18px;">Door width:</label>
+    <select id="doorWidthSelect"
+      style="background:#2c3329;color:#eee7d8;border:1px solid #3a4039;padding:4px 8px;font-family:inherit;font-size:12px;border-radius:3px;">
+      <option value="24">24"</option>
+      <option value="28" selected>28"</option>
+    </select>
+    <label style="margin-left:18px;"><input type="checkbox" id="casterToggle" checked> show corner wheels</label>
+    <label style="margin-left:18px;"><input type="checkbox" id="ceilingToggle" checked> show lightweight top panel +
+      foam ceiling</label>
+  </div>
 
-<div class="layout">
-  <div id="viewer"><div class="hint">drag = orbit · wheel = zoom</div></div>
-  <div id="specs"></div>
-</div>
+  <div class="layout">
+    <div id="viewer">
+      <div class="hint">drag = orbit · wheel = zoom</div>
+    </div>
+    <div id="specs"></div>
+  </div>
 
-<div class="drawing-wrap">
-  <h2>Top-down cut/build drawing — 3' - 4' - 3' split (recommended)</h2>
-  <svg id="planSvg" viewBox="0 0 1000 560" width="100%" height="520"></svg>
-  <p class="note">All dimensions in inches. R = circle radius the original bow was drawn on (≈47"). All 3 front shields are cut flat — the two 3ft side shields are essentially flat anyway (only ~0.9" of natural curve over their length), and the 4ft center shield is also left flat rather than bowed, which brings the booth's depth at the center to 75.36" instead of the true 81.35" bow apex. Door is set into the left straight side wall, 30" wide.</p>
-</div>
+  <div class="drawing-wrap">
+    <h2>Top-down cut/build drawing — 3' - 4' - 3' split (recommended)</h2>
+    <svg id="planSvg" viewBox="0 0 1000 560" width="100%" height="520"></svg>
+    <p class="note">All dimensions in inches. R = circle radius the original bow was drawn on (≈47"). All 3 front
+      shields are cut flat — the two 3ft side shields are essentially flat anyway (only ~0.9" of natural curve over
+      their length), and the 4ft center shield is also left flat rather than bowed, which brings the booth's depth at
+      the center to 75.36" instead of the true 81.35" bow apex. Door is set into the left straight side wall, 30" wide.
+    </p>
+  </div>
 
-<div class="drawing-wrap">
-  <h2>Floor plan — plywood deck, joist grid &amp; corner casters</h2>
-  <svg id="floorSvg" viewBox="0 0 900 520" width="100%" height="460"></svg>
-  <p class="note">Joist grid (≈16" o.c.) carries the plywood deck and holds the mineral-wool sound-deadening fill, same idea as your reference build. The floor is cut ~2.5" larger than the wall line all the way around, so it fully covers/caps the frame with a small lip rather than stopping flush at the studs (the top is now a light split plywood cap on 3 stick beams, not a heavy frame — see the framing/top sections below). All 6 hexagon corners now get a locking caster (back-L, back-R, side-R, the 2 front panel joints, side-L) for full support and easy rolling.</p>
-</div>
+  <div class="drawing-wrap">
+    <h2>Floor plan — plywood deck, joist grid &amp; corner casters</h2>
+    <svg id="floorSvg" viewBox="0 0 900 520" width="100%" height="460"></svg>
+    <p class="note">Joist grid (≈16" o.c.) carries the plywood deck and holds the mineral-wool sound-deadening fill,
+      same idea as your reference build. The floor is cut ~2.5" larger than the wall line all the way around, so it
+      fully covers/caps the frame with a small lip rather than stopping flush at the studs (the top is now a light split
+      plywood cap on 3 stick beams, not a heavy frame — see the framing/top sections below). All 6 hexagon corners now
+      get a locking caster (back-L, back-R, side-R, the 2 front panel joints, side-L) for full support and easy rolling.
+    </p>
+  </div>
 
-<div class="drawing-wrap">
-  <h2>Detailed floor framing plan — every member dimensioned (deep/heavy, for mass &amp; sound isolation)</h2>
-  <svg id="framingSvg" viewBox="0 0 900 560" width="100%" height="500"></svg>
-  <div id="framingCutlist"></div>
-  <p class="note">This is the structural skeleton under the floor's plywood top deck and bottom skin — a torsion box. Use 2x6 (or deeper, to match the floor-thickness slider above) lumber on edge for the rim and every joist/runner shown, so the finished floor is the full 5–6"+ deep. The top of the cage is intentionally <b>not</b> built this heavy: it's a thin split plywood cap hanging on 3 light stick beams — see the dedicated "Top measurement plan" section below.</p>
-</div>
+  <div class="drawing-wrap">
+    <h2>Detailed floor framing plan — every member dimensioned (deep/heavy, for mass &amp; sound isolation)</h2>
+    <svg id="framingSvg" viewBox="0 0 900 560" width="100%" height="500"></svg>
+    <div id="framingCutlist"></div>
+    <p class="note">This is the structural skeleton under the floor's plywood top deck and bottom skin — a torsion box.
+      Use 2x6 (or deeper, to match the floor-thickness slider above) lumber on edge for the rim and every joist/runner
+      shown, so the finished floor is the full 5–6"+ deep. The top of the cage is intentionally <b>not</b> built this
+      heavy: it's a thin split plywood cap hanging on 3 light stick beams — see the dedicated "Top measurement plan"
+      section below.</p>
+  </div>
 
-<div class="drawing-wrap">
-  <h2>Back wall framing plan — every measurement, updates with the height slider</h2>
-  <svg id="backWallSvg" viewBox="0 0 800 560" width="100%" height="480"></svg>
-  <div id="backWallCutlist"></div>
-  <p class="note">This stud-wall elevation applies to the <b>back wall only</b> (90" wide, the only solid plywood wall). Both side walls (left and right, 48" each) are now polycarbonate — they only need perimeter top/bottom plates and the 6 corner posts, no interior stud grid. The right side wall also needs a reinforced post at the back corner where the door hinges mount.</p>
-</div>
+  <div class="drawing-wrap">
+    <h2>Back wall framing plan — every measurement, updates with the height slider</h2>
+    <svg id="backWallSvg" viewBox="0 0 800 560" width="100%" height="480"></svg>
+    <div id="backWallCutlist"></div>
+    <p class="note">This stud-wall elevation applies to the <b>back wall only</b> (90" wide, the only solid plywood
+      wall). Both side walls (left and right, 48" each) are now polycarbonate — they only need perimeter top/bottom
+      plates and the 6 corner posts, no interior stud grid. The right side wall also needs a reinforced post at the back
+      corner where the door hinges mount.</p>
+  </div>
 
-<div class="drawing-wrap">
-  <h2>Top measurement plan — split panel + 3-stick hanging frame</h2>
-  <svg id="topPlanSvg" viewBox="0 0 900 560" width="100%" height="480"></svg>
-  <div id="topPlanCutlist"></div>
-  <p class="note">Top-down view of the lightweight cap: it's cut in half down the centerline (dashed gold line) into a left and right piece, rejoined with 3 splice plates across the seam. The 3 stick beams run side-to-side and rest their ends on the wall top plates (back rectangle gets 2 full-width beams, the front bow gets 1 shorter one) — the panel halves simply lay on top of this little ladder, nothing needs to stand up from the floor.</p>
-</div>
+  <div class="drawing-wrap">
+    <h2>Top measurement plan — split panel + 3-stick hanging frame</h2>
+    <svg id="topPlanSvg" viewBox="0 0 900 560" width="100%" height="480"></svg>
+    <div id="topPlanCutlist"></div>
+    <p class="note">Top-down view of the lightweight cap: it's cut in half down the centerline (dashed gold line) into a
+      left and right piece, rejoined with 3 splice plates across the seam. The 3 stick beams run side-to-side and rest
+      their ends on the wall top plates (back rectangle gets 2 full-width beams, the front bow gets 1 shorter one) — the
+      panel halves simply lay on top of this little ladder, nothing needs to stand up from the floor.</p>
+  </div>
 
-<div class="drawing-wrap">
-  <h2>Polycarbonate order &amp; cut list — every piece with exact dimensions</h2>
-  <svg id="polySvg" viewBox="0 0 1000 380" width="100%" height="360"></svg>
-  <div id="polyCutList"></div>
-  <p class="note">All pieces are straight square cuts except the three front shields, which need angled (miter) cuts at both ends — the miter angle from square is listed for each end. If you are using aluminum U-channel extrusions at the joins (recommended — no glue, easy to disassemble), cut everything square and let the channel close the gap. The miter angles are only needed for a flush butt-joint without channel. Stock sizes listed include ~1" kerf/margin — confirm with your supplier before cutting.</p>
-</div>
+  <div class="drawing-wrap">
+    <h2>Polycarbonate order &amp; cut list — every piece with exact dimensions</h2>
+    <svg id="polySvg" viewBox="0 0 1000 380" width="100%" height="360"></svg>
+    <div id="polyCutList"></div>
+    <p class="note">With snap-routing into the studs, the front shield widths are the stock sheet sizes — no width
+      trimming and no miter/angle cuts needed anywhere. The routed groove (~¼" deep) in each stud accepts the square
+      edge and sits at the correct angle. The ONLY cuts required are: height cuts on all panels, and one rip cut on
+      Sheet C (ripping the 48" sheet into the 28" door + 19" fixed panel). The yellow groove markers on the diagram show
+      which edges get routed into the studs.</p>
+  </div>
 
-<div class="drawing-wrap" id="bomWrap">
-  <h2>Materials list (bill of materials)</h2>
-  <div id="bom"></div>
-  <p class="note">Quantities are planning estimates sized to the dimensions/height above, with ~10–15% waste already factored into sheet/board counts. Round up to your supplier's stock sizes; always good to get 1 extra sheet of plywood for the inevitable mis-cut.</p>
-</div>
+  <div class="drawing-wrap" id="bomWrap">
+    <h2>Materials list (bill of materials)</h2>
+    <div id="bom"></div>
+    <p class="note">Quantities are planning estimates sized to the dimensions/height above, with ~10–15% waste already
+      factored into sheet/board counts. Round up to your supplier's stock sizes; always good to get 1 extra sheet of
+      plywood for the inevitable mis-cut.</p>
+  </div>
 
-<script>
-// ---------- geometry ----------
-const R = 47.03; // in, radius of original bow
-const HALFCHORD = 45; // half of the 90" chord
-const BACK_DEPTH = 48; // in, straight side-wall depth before the bow starts
-const SAGITTA = 33.354;
-const totalAngle = 2*Math.asin(HALFCHORD/R); // rad
+  <script>
+    // ---------- geometry ----------
+    const R = 47.03; // in, radius of original bow
+    const HALFCHORD = 45; // half of the 90" chord
+    const BACK_DEPTH = 48; // in, straight side-wall depth before the bow starts
+    const SAGITTA = 33.354;
+    const totalAngle = 2 * Math.asin(HALFCHORD / R); // rad
 
-function splitToPoints(segLensFt){ // array of feet lengths, e.g [3,4,3]
-  const lens = segLensFt.map(f=>f*12);
-  const total = lens.reduce((a,b)=>a+b,0);
-  let angAcc = -totalAngle/2;
-  const pts = [{a:angAcc}];
-  lens.forEach(L=>{ angAcc += L/R; pts.push({a:angAcc}); });
-  // local coords: x = R sin(a), y = R cos(a) + (apex_y - R), apex_y = SAGITTA
-  return pts.map(p=>({
-    x: R*Math.sin(p.a),
-    y: BACK_DEPTH + (SAGITTA - R) + R*Math.cos(p.a)
-  }));
-}
-function curvePoints(n){
-  const pts=[];
-  for(let i=0;i<=n;i++){
-    const a = -totalAngle/2 + (totalAngle*i/n);
-    pts.push({x:R*Math.sin(a), y: BACK_DEPTH + (SAGITTA-R) + R*Math.cos(a)});
-  }
-  return pts;
-}
+    function splitToPoints(segLensFt) { // array of feet lengths, e.g [3,4,3]
+      const lens = segLensFt.map(f => f * 12);
+      const total = lens.reduce((a, b) => a + b, 0);
+      let angAcc = -totalAngle / 2;
+      const pts = [{ a: angAcc }];
+      lens.forEach(L => { angAcc += L / R; pts.push({ a: angAcc }); });
+      // local coords: x = R sin(a), y = R cos(a) + (apex_y - R), apex_y = SAGITTA
+      return pts.map(p => ({
+        x: R * Math.sin(p.a),
+        y: BACK_DEPTH + (SAGITTA - R) + R * Math.cos(p.a)
+      }));
+    }
+    function curvePoints(n) {
+      const pts = [];
+      for (let i = 0; i <= n; i++) {
+        const a = -totalAngle / 2 + (totalAngle * i / n);
+        pts.push({ x: R * Math.sin(a), y: BACK_DEPTH + (SAGITTA - R) + R * Math.cos(a) });
+      }
+      return pts;
+    }
 
-function chordLen(p0,p1){return Math.hypot(p1.x-p0.x,p1.y-p0.y);}
+    function chordLen(p0, p1) { return Math.hypot(p1.x - p0.x, p1.y - p0.y); }
 
-// door: set into the LEFT straight side wall (x=-45, y:0..48)
-const DEFAULT_DOOR_W = 28; // default, overridden by selector
-const CASTER_R = 2;
+    // door: set into the LEFT straight side wall (x=-45, y:0..48)
+    const DEFAULT_DOOR_W = 28; // default, overridden by selector
+    const CASTER_R = 2;
 
-const modes = {
-  "343": ()=>splitToPoints([3,4,3]),
-  "262": ()=>splitToPoints([2,6,2]),
-  "curve": ()=>curvePoints(28)
-};
+    const modes = {
+      "343": () => splitToPoints([3, 4, 3]),
+      "262": () => splitToPoints([2, 6, 2]),
+      "curve": () => curvePoints(28)
+    };
 
-// full plan (back wall + side walls + front) for a given front point list
-function fullPlan(frontPts){
-  return [
-    {x:-HALFCHORD,y:0}, {x:HALFCHORD,y:0}, // back wall (drawn order fixed below)
-    ...frontPts
-  ];
-}
+    // full plan (back wall + side walls + front) for a given front point list
+    function fullPlan(frontPts) {
+      return [
+        { x: -HALFCHORD, y: 0 }, { x: HALFCHORD, y: 0 }, // back wall (drawn order fixed below)
+        ...frontPts
+      ];
+    }
 
-// ---------- three.js scene ----------
-const viewerEl = document.getElementById('viewer');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(40, viewerEl.clientWidth/viewerEl.clientHeight, 1, 2000);
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
-viewerEl.appendChild(renderer.domElement);
+    // ---------- three.js scene ----------
+    const viewerEl = document.getElementById('viewer');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, viewerEl.clientWidth / viewerEl.clientHeight, 1, 2000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
+    viewerEl.appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0xffffff,0.65));
-const dl = new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(120,200,150); scene.add(dl);
-const dl2 = new THREE.DirectionalLight(0x88aaff,0.25); dl2.position.set(-150,80,-100); scene.add(dl2);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.9); dl.position.set(120, 200, 150); scene.add(dl);
+    const dl2 = new THREE.DirectionalLight(0x88aaff, 0.25); dl2.position.set(-150, 80, -100); scene.add(dl2);
 
-const rig = new THREE.Group(); scene.add(rig);
-let radius=260, theta=0.9, phi=1.05;
-function updateCam(){
-  camera.position.set(radius*Math.sin(phi)*Math.sin(theta), radius*Math.cos(phi), radius*Math.sin(phi)*Math.cos(theta));
-  camera.lookAt(0, 30, 35);
-}
-updateCam();
+    const rig = new THREE.Group(); scene.add(rig);
+    let radius = 260, theta = 0.9, phi = 1.05;
+    function updateCam() {
+      camera.position.set(radius * Math.sin(phi) * Math.sin(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.cos(theta));
+      camera.lookAt(0, 30, 35);
+    }
+    updateCam();
 
-let dragging=false, lastX=0,lastY=0;
-renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
-window.addEventListener('pointerup',()=>dragging=false);
-window.addEventListener('pointermove',e=>{
-  if(!dragging)return;
-  theta -= (e.clientX-lastX)*0.006;
-  phi   -= (e.clientY-lastY)*0.006;
-  phi = Math.max(0.25, Math.min(1.5, phi));
-  lastX=e.clientX; lastY=e.clientY;
-  updateCam();
-});
-renderer.domElement.addEventListener('wheel',e=>{
-  radius += e.deltaY*0.2;
-  radius = Math.max(120, Math.min(550, radius));
-  updateCam(); e.preventDefault();
-},{passive:false});
-
-const woodMat = new THREE.MeshStandardMaterial({color:0xc9a876, roughness:0.85, metalness:0.05, side:THREE.DoubleSide});
-const frameMat = new THREE.MeshStandardMaterial({color:0x8a6a42, roughness:0.8, side:THREE.DoubleSide});
-const polyMat = new THREE.MeshPhysicalMaterial({color:0xbcd6da, roughness:0.15, metalness:0, transparent:true, opacity:0.35, side:THREE.DoubleSide});
-const floorMat = new THREE.MeshStandardMaterial({color:0x7a5a36, roughness:0.9, side:THREE.DoubleSide});
-const wheelMat = new THREE.MeshStandardMaterial({color:0x111111, roughness:0.6});
-const plateMat = new THREE.MeshStandardMaterial({color:0x999999, roughness:0.5, metalness:0.4});
-const polyDoorMat = new THREE.MeshPhysicalMaterial({color:0xbcd6da, roughness:0.08, metalness:0, transparent:true, opacity:0.4, side:THREE.DoubleSide});
-
-function lerpPt(p0,p1,t){ return {x:p0.x+(p1.x-p0.x)*t, y:p0.y+(p1.y-p0.y)*t}; }
-
-// RIGHT side wall: polycarbonate wall with a poly door.
-// Hinge is at the BACK corner (p0 = backR = {x:45, y:0}).
-// Door occupies y=0..doorW from the back; remainder y=doorW..48 is a solid poly panel.
-// Door swings outward (away from interior, i.e. toward +x).
-function buildRightPolyWallWithDoor(p0, p1, height, withDoor, doorW, group){
-  const studSize = 1.5; // actual 2x2 lumber = 1.5" x 1.5"
-
-  if(!withDoor){
-    group.add(quad(p0,p1,0,height,polyMat));
-    // perimeter posts even when no door
-    [p0,p1].forEach(p=>{
-      const post = new THREE.Mesh(new THREE.BoxGeometry(studSize,height,studSize), frameMat);
-      post.position.set(p.x-studSize/2, height/2, p.y);
-      group.add(post);
+    let dragging = false, lastX = 0, lastY = 0;
+    renderer.domElement.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+    window.addEventListener('pointerup', () => dragging = false);
+    window.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      theta -= (e.clientX - lastX) * 0.006;
+      phi -= (e.clientY - lastY) * 0.006;
+      phi = Math.max(0.25, Math.min(1.5, phi));
+      lastX = e.clientX; lastY = e.clientY;
+      updateCam();
     });
-    return;
-  }
-  const doorH = Math.min(78, height-2);
-  const L = chordLen(p0,p1); // = BACK_DEPTH = 48
-  const t1 = doorW/L;
-  const hingeEnd = p0;                    // back corner (backR) — hinge side
-  const doorFront = lerpPt(p0,p1,t1);    // jamb post position — free end of door / start of fixed panel
-  const wallRemainder = p1;              // sideR0
+    renderer.domElement.addEventListener('wheel', e => {
+      radius += e.deltaY * 0.2;
+      radius = Math.max(120, Math.min(550, radius));
+      updateCam(); e.preventDefault();
+    }, { passive: false });
 
-  // fixed poly panel: from jamb post (y≈29.5") to sideR0 (y=48") = ~18.5" visible ≈ 19" ordered
-  // the quad starts at doorFront (y=28"), but the jamb post covers the first 1.5", so the visible
-  // poly starts at y=29.5" effectively — order 19" stock to be safe
-  group.add(quad(doorFront, wallRemainder, 0, height, polyMat));
-  // header strip above door opening
-  group.add(quad(hingeEnd, doorFront, doorH, height, polyMat));
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0xc9a876, roughness: 0.85, metalness: 0.05, side: THREE.DoubleSide });
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x8a6a42, roughness: 0.8, side: THREE.DoubleSide });
+    const polyMat = new THREE.MeshPhysicalMaterial({ color: 0xbcd6da, roughness: 0.15, metalness: 0, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x7a5a36, roughness: 0.9, side: THREE.DoubleSide });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
+    const plateMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.5, metalness: 0.4 });
+    const polyDoorMat = new THREE.MeshPhysicalMaterial({ color: 0xbcd6da, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
 
-  // ---------- 2x2 stud posts ----------
-  // 1. Hinge-side post: at the back corner (x=45, y=0) — reinforced, hinges bolt to this
-  const hingePost = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
-  hingePost.position.set(hingeEnd.x - studSize/2, height/2, hingeEnd.y + studSize/2);
-  group.add(hingePost);
+    function lerpPt(p0, p1, t) { return { x: p0.x + (p1.x - p0.x) * t, y: p0.y + (p1.y - p0.y) * t }; }
 
-  // 2. Jamb post: at the door-front/fixed-panel boundary (x=45, y=doorW) — door stop & panel edge
-  const jambPost = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
-  jambPost.position.set(doorFront.x - studSize/2, height/2, doorFront.y);
-  group.add(jambPost);
+    // RIGHT side wall: polycarbonate wall with a poly door.
+    // Hinge is at the BACK corner (p0 = backR = {x:45, y:0}).
+    // Door occupies y=0..doorW from the back; remainder y=doorW..48 is a solid poly panel.
+    // Door swings outward (away from interior, i.e. toward +x).
+    function buildRightPolyWallWithDoor(p0, p1, height, withDoor, doorW, group) {
+      const studSize = 1.5; // actual 2x2 lumber = 1.5" x 1.5"
 
-  // 3. Far-end post at sideR0 (front of right wall)
-  const farPost = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
-  farPost.position.set(wallRemainder.x - studSize/2, height/2, wallRemainder.y);
-  group.add(farPost);
+      if (!withDoor) {
+        group.add(quad(p0, p1, 0, height, polyMat));
+        // perimeter posts even when no door
+        [p0, p1].forEach(p => {
+          const post = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
+          post.position.set(p.x - studSize / 2, height / 2, p.y);
+          group.add(post);
+        });
+        return;
+      }
+      const doorH = Math.min(78, height - 2);
+      const L = chordLen(p0, p1); // = BACK_DEPTH = 48
+      const t1 = doorW / L;
+      const hingeEnd = p0;                    // back corner (backR) — hinge side
+      const doorFront = lerpPt(p0, p1, t1);    // jamb post position — free end of door / start of fixed panel
+      const wallRemainder = p1;              // sideR0
 
-  // poly door slab — inset 1" toward interior, sits between the two stud posts
-  const inset = 1.5 + studSize/2; // flush with the interior face of the hinge post
-  const hInset = {x: hingeEnd.x - inset, y: hingeEnd.y + studSize};
-  const fInset = {x: doorFront.x - inset, y: doorFront.y};
-  group.add(quad(hInset, fInset, 1, doorH, polyDoorMat));
+      // fixed poly panel: from jamb post (y≈29.5") to sideR0 (y=48") = ~18.5" visible ≈ 19" ordered
+      // the quad starts at doorFront (y=28"), but the jamb post covers the first 1.5", so the visible
+      // poly starts at y=29.5" effectively — order 19" stock to be safe
+      group.add(quad(doorFront, wallRemainder, 0, height, polyMat));
+      // header strip above door opening
+      group.add(quad(hingeEnd, doorFront, doorH, height, polyMat));
 
-  // 3 hinges on the back post face
-  [0.12,0.5,0.88].forEach(f=>{
-    const hy = new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.7,3.5,8), plateMat);
-    hy.rotation.x = Math.PI/2;
-    hy.position.set(hingeEnd.x - studSize - 0.5, doorH*f, hingeEnd.y + studSize/2);
-    group.add(hy);
-  });
+      // ---------- 2x2 stud posts ----------
+      // 1. Hinge-side post: at the back corner (x=45, y=0) — reinforced, hinges bolt to this
+      const hingePost = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
+      hingePost.position.set(hingeEnd.x - studSize / 2, height / 2, hingeEnd.y + studSize / 2);
+      group.add(hingePost);
 
-  // handle on the free end (jamb side), mid-height
-  const handle = new THREE.Mesh(new THREE.BoxGeometry(1,1,2.2), plateMat);
-  handle.position.set(fInset.x - 1.5, doorH*0.45, fInset.y - 1);
-  group.add(handle);
+      // 2. Jamb post: at the door-front/fixed-panel boundary (x=45, y=doorW) — door stop & panel edge
+      const jambPost = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
+      jambPost.position.set(doorFront.x - studSize / 2, height / 2, doorFront.y);
+      group.add(jambPost);
 
-  // door-swing arc at mid-height (visual reference)
-  const arcY = doorH*0.5;
-  const arcN = 16;
-  for(let i=0;i<arcN;i++){
-    const a0=(Math.PI/2)*(i/arcN), a1=(Math.PI/2)*((i+1)/arcN);
-    const pts0={x:hingeEnd.x+doorW*Math.sin(a0), y:hingeEnd.y+doorW*(1-Math.cos(a0))};
-    const pts1={x:hingeEnd.x+doorW*Math.sin(a1), y:hingeEnd.y+doorW*(1-Math.cos(a1))};
-    const mx=(pts0.x+pts1.x)/2, mz=(pts0.y+pts1.y)/2;
-    const dx=pts1.x-pts0.x, dz=pts1.y-pts0.y, segLen=Math.hypot(dx,dz);
-    const seg=new THREE.Mesh(new THREE.BoxGeometry(segLen,0.3,0.3), plateMat);
-    seg.position.set(mx,arcY,mz);
-    seg.rotation.y=-Math.atan2(dz,dx);
-    group.add(seg);
-  }
-}
-const topPanelMat = new THREE.MeshStandardMaterial({color:0xe6c9a0, roughness:0.8, metalness:0.0, side:THREE.DoubleSide});
-const foamMat = new THREE.MeshStandardMaterial({color:0x1c4f78, roughness:0.55, metalness:0.05});
-const OVERHANG = 2.5; // in, floor/roof lip beyond the wall line
+      // 3. Far-end post at sideR0 (front of right wall)
+      const farPost = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
+      farPost.position.set(wallRemainder.x - studSize / 2, height / 2, wallRemainder.y);
+      group.add(farPost);
 
-function offsetPolygon(pts, margin){
-  const n = pts.length;
-  let cx=0,cy=0; pts.forEach(p=>{cx+=p.x;cy+=p.y;}); cx/=n; cy/=n;
-  // offset each edge outward along its own normal (keeps straight edges straight),
-  // then re-intersect consecutive offset edges to get sharp mitered corners —
-  // matches a real plywood/trim build where each flat panel gets its own straight cap piece.
-  const lines = [];
-  for(let i=0;i<n;i++){
-    const p1=pts[i], p2=pts[(i+1)%n];
-    const dx=p2.x-p1.x, dy=p2.y-p1.y;
-    const len=Math.hypot(dx,dy)||1;
-    let nx=-dy/len, ny=dx/len;
-    const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
-    if((mx-cx)*nx+(my-cy)*ny < 0){ nx=-nx; ny=-ny; } // make sure normal points outward, away from centroid
-    lines.push({
-      p1:{x:p1.x+nx*margin, y:p1.y+ny*margin},
-      p2:{x:p2.x+nx*margin, y:p2.y+ny*margin}
-    });
-  }
-  function lineIntersect(a1,a2,b1,b2){
-    const d1x=a2.x-a1.x, d1y=a2.y-a1.y, d2x=b2.x-b1.x, d2y=b2.y-b1.y;
-    const denom = d1x*d2y - d1y*d2x;
-    if(Math.abs(denom)<1e-9) return {x:(a2.x+b1.x)/2, y:(a2.y+b1.y)/2};
-    const t = ((b1.x-a1.x)*d2y - (b1.y-a1.y)*d2x)/denom;
-    return {x:a1.x+d1x*t, y:a1.y+d1y*t};
-  }
-  const out=[];
-  for(let i=0;i<n;i++){
-    const prev = lines[(i-1+n)%n], curr = lines[i];
-    out.push(lineIntersect(prev.p1,prev.p2,curr.p1,curr.p2));
-  }
-  return out;
-}
-function pointInPoly(x,y,poly){
-  let inside=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-    const xi=poly[i].x, yi=poly[i].y, xj=poly[j].x, yj=poly[j].y;
-    const hit = ((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi);
-    if(hit) inside=!inside;
-  }
-  return inside;
-}
-function tube(p0,p1,y,radius,mat,group){
-  const dx=p1.x-p0.x, dz=p1.y-p0.y, len=Math.hypot(dx,dz);
-  const geo = new THREE.CylinderGeometry(radius,radius,len,10);
-  const mesh = new THREE.Mesh(geo,mat);
-  mesh.position.set((p0.x+p1.x)/2, y, (p0.y+p1.y)/2);
-  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(dx,0,dz).normalize());
-  group.add(mesh);
-}
-function stick(x,y,h0,h1,radius,mat,group){
-  const geo = new THREE.CylinderGeometry(radius,radius,h1-h0,8);
-  const mesh = new THREE.Mesh(geo,mat);
-  mesh.position.set(x,(h0+h1)/2,y);
-  group.add(mesh);
-}
-// lightweight top: a thin plywood cap, split into 2 halves down the centerline (like your reference photo,
-// with splice plates to rejoin), resting on a few simple support sticks instead of a full frame.
-function buildLightTop(rimPts, height, group){
-  const [backL,backR,sideR0,jointR,jointL,sideL0] = rimPts;
-  const crossBack = {x:0,y:0}, crossFront = {x:0,y:jointL.y};
-  const leftPoly  = [crossBack, backL, sideL0, jointL, crossFront];
-  const rightPoly = [crossBack, crossFront, jointR, sideR0, backR];
-  const thickness = 0.6; // thin/light, e.g. 1/4"-3/8" door-skin plywood
-  group.add(buildSlab(leftPoly, height, thickness, topPanelMat));
-  group.add(buildSlab(rightPoly, height, thickness, topPanelMat));
-  // splice plates along the center seam (visual match to your reference photo)
-  [10,35,60].forEach(y=>{
-    if(y<=jointL.y){
-      const plate = new THREE.Mesh(new THREE.BoxGeometry(9,0.3,2.5), plateMat);
-      plate.position.set(0, height+thickness+0.2, y);
+      // poly door slab — inset 1" toward interior, sits between the two stud posts
+      const inset = 1.5 + studSize / 2; // flush with the interior face of the hinge post
+      const hInset = { x: hingeEnd.x - inset, y: hingeEnd.y + studSize };
+      const fInset = { x: doorFront.x - inset, y: doorFront.y };
+      group.add(quad(hInset, fInset, 1, doorH, polyDoorMat));
+
+      // 3 hinges on the back post face
+      [0.12, 0.5, 0.88].forEach(f => {
+        const hy = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 3.5, 8), plateMat);
+        hy.rotation.x = Math.PI / 2;
+        hy.position.set(hingeEnd.x - studSize - 0.5, doorH * f, hingeEnd.y + studSize / 2);
+        group.add(hy);
+      });
+
+      // handle on the free end (jamb side), mid-height
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 2.2), plateMat);
+      handle.position.set(fInset.x - 1.5, doorH * 0.45, fInset.y - 1);
+      group.add(handle);
+
+      // door-swing arc at mid-height (visual reference)
+      const arcY = doorH * 0.5;
+      const arcN = 16;
+      for (let i = 0; i < arcN; i++) {
+        const a0 = (Math.PI / 2) * (i / arcN), a1 = (Math.PI / 2) * ((i + 1) / arcN);
+        const pts0 = { x: hingeEnd.x + doorW * Math.sin(a0), y: hingeEnd.y + doorW * (1 - Math.cos(a0)) };
+        const pts1 = { x: hingeEnd.x + doorW * Math.sin(a1), y: hingeEnd.y + doorW * (1 - Math.cos(a1)) };
+        const mx = (pts0.x + pts1.x) / 2, mz = (pts0.y + pts1.y) / 2;
+        const dx = pts1.x - pts0.x, dz = pts1.y - pts0.y, segLen = Math.hypot(dx, dz);
+        const seg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 0.3, 0.3), plateMat);
+        seg.position.set(mx, arcY, mz);
+        seg.rotation.y = -Math.atan2(dz, dx);
+        group.add(seg);
+      }
+    }
+    const topPanelMat = new THREE.MeshStandardMaterial({ color: 0xe6c9a0, roughness: 0.8, metalness: 0.0, side: THREE.DoubleSide });
+    const foamMat = new THREE.MeshStandardMaterial({ color: 0x1c4f78, roughness: 0.55, metalness: 0.05 });
+    const OVERHANG = 2.5; // in, floor/roof lip beyond the wall line
+
+    function offsetPolygon(pts, margin) {
+      const n = pts.length;
+      let cx = 0, cy = 0; pts.forEach(p => { cx += p.x; cy += p.y; }); cx /= n; cy /= n;
+      // offset each edge outward along its own normal (keeps straight edges straight),
+      // then re-intersect consecutive offset edges to get sharp mitered corners —
+      // matches a real plywood/trim build where each flat panel gets its own straight cap piece.
+      const lines = [];
+      for (let i = 0; i < n; i++) {
+        const p1 = pts[i], p2 = pts[(i + 1) % n];
+        const dx = p2.x - p1.x, dy = p2.y - p1.y;
+        const len = Math.hypot(dx, dy) || 1;
+        let nx = -dy / len, ny = dx / len;
+        const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+        if ((mx - cx) * nx + (my - cy) * ny < 0) { nx = -nx; ny = -ny; } // make sure normal points outward, away from centroid
+        lines.push({
+          p1: { x: p1.x + nx * margin, y: p1.y + ny * margin },
+          p2: { x: p2.x + nx * margin, y: p2.y + ny * margin }
+        });
+      }
+      function lineIntersect(a1, a2, b1, b2) {
+        const d1x = a2.x - a1.x, d1y = a2.y - a1.y, d2x = b2.x - b1.x, d2y = b2.y - b1.y;
+        const denom = d1x * d2y - d1y * d2x;
+        if (Math.abs(denom) < 1e-9) return { x: (a2.x + b1.x) / 2, y: (a2.y + b1.y) / 2 };
+        const t = ((b1.x - a1.x) * d2y - (b1.y - a1.y) * d2x) / denom;
+        return { x: a1.x + d1x * t, y: a1.y + d1y * t };
+      }
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const prev = lines[(i - 1 + n) % n], curr = lines[i];
+        out.push(lineIntersect(prev.p1, prev.p2, curr.p1, curr.p2));
+      }
+      return out;
+    }
+    function pointInPoly(x, y, poly) {
+      let inside = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+        const hit = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (hit) inside = !inside;
+      }
+      return inside;
+    }
+    function tube(p0, p1, y, radius, mat, group) {
+      const dx = p1.x - p0.x, dz = p1.y - p0.y, len = Math.hypot(dx, dz);
+      const geo = new THREE.CylinderGeometry(radius, radius, len, 10);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set((p0.x + p1.x) / 2, y, (p0.y + p1.y) / 2);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, 0, dz).normalize());
+      group.add(mesh);
+    }
+    function stick(x, y, h0, h1, radius, mat, group) {
+      const geo = new THREE.CylinderGeometry(radius, radius, h1 - h0, 8);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, (h0 + h1) / 2, y);
+      group.add(mesh);
+    }
+    // lightweight top: a thin plywood cap, split into 2 halves down the centerline (like your reference photo,
+    // with splice plates to rejoin), resting on a few simple support sticks instead of a full frame.
+    function buildLightTop(rimPts, height, group) {
+      const [backL, backR, sideR0, jointR, jointL, sideL0] = rimPts;
+      const crossBack = { x: 0, y: 0 }, crossFront = { x: 0, y: jointL.y };
+      const leftPoly = [crossBack, backL, sideL0, jointL, crossFront];
+      const rightPoly = [crossBack, crossFront, jointR, sideR0, backR];
+      const thickness = 0.6; // thin/light, e.g. 1/4"-3/8" door-skin plywood
+      group.add(buildSlab(leftPoly, height, thickness, topPanelMat));
+      group.add(buildSlab(rightPoly, height, thickness, topPanelMat));
+      // splice plates along the center seam (visual match to your reference photo)
+      [10, 35, 60].forEach(y => {
+        if (y <= jointL.y) {
+          const plate = new THREE.Mesh(new THREE.BoxGeometry(9, 0.3, 2.5), plateMat);
+          plate.position.set(0, height + thickness + 0.2, y);
+          group.add(plate);
+        }
+      });
+      // 3 stick beams spanning side-to-side at ceiling height, forming the frame the panel hangs/rests on
+      // (resting on the wall top plates at their ends — not standing up from the floor)
+      function xRightAt(y) { if (y <= 48) return 45; const f = (y - 48) / (jointL.y - 48); return 45 - f * (45 - jointR.x); }
+      [20, 45, 65].forEach(y => {
+        const xr = xRightAt(y);
+        tube({ x: -xr, y }, { x: xr, y }, height, 0.7, woodMat, group);
+      });
+    }
+
+    function buildSlab(shapePts, yBottom, thickness, mat) {
+      const shape = new THREE.Shape(shapePts.map(p => new THREE.Vector2(p.x, p.y)));
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false });
+      // ExtrudeGeometry builds in local (x, y, z:0..thickness). rotateX(+90deg) maps that to
+      // world (x, -z, y) i.e. world depth(Z) = +y (matches the walls, which use p.y directly as world Z).
+      // Using -90deg here previously made world Z = -y, mirroring floor/roof relative to the walls.
+      geo.rotateX(Math.PI / 2);
+      geo.translate(0, yBottom + thickness, 0);
+      return new THREE.Mesh(geo, mat);
+    }
+    function buildFoamCeiling(footprintPts, ceilingY, group) {
+      const spacing = 4.4, pyrH = 4, pyrR = spacing / 2 * 0.95;
+      const baseGeo = new THREE.ConeGeometry(pyrR, pyrH, 4);
+      baseGeo.rotateY(Math.PI / 4); // square the pyramid to the grid
+      baseGeo.rotateX(Math.PI);  // apex points down into the room
+      const xs = []; for (let x = -44; x <= 44; x += spacing) xs.push(x);
+      const ys = []; for (let y = 4; y <= 82; y += spacing) ys.push(y);
+      const cells = [];
+      xs.forEach(x => ys.forEach(y => { if (pointInPoly(x, y, footprintPts)) cells.push({ x, y }); }));
+      const inst = new THREE.InstancedMesh(baseGeo, foamMat, Math.max(cells.length, 1));
+      const dummy = new THREE.Object3D();
+      cells.forEach((c, i) => {
+        dummy.position.set(c.x, ceilingY - pyrH / 2, c.y);
+        dummy.updateMatrix();
+        inst.setMatrixAt(i, dummy.matrix);
+      });
+      inst.count = cells.length;
+      group.add(inst);
+    }
+
+
+    function addCaster(group, p, floorBottomY) {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(CASTER_R, CASTER_R, 1.6, 16), wheelMat);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.position.set(p.x, floorBottomY - CASTER_R, p.y);
+      group.add(wheel);
+      const plate = new THREE.Mesh(new THREE.BoxGeometry(3.5, 1.2, 3.5), plateMat);
+      plate.position.set(p.x, floorBottomY + 0.6, p.y);
       group.add(plate);
     }
-  });
-  // 3 stick beams spanning side-to-side at ceiling height, forming the frame the panel hangs/rests on
-  // (resting on the wall top plates at their ends — not standing up from the floor)
-  function xRightAt(y){ if(y<=48) return 45; const f=(y-48)/(jointL.y-48); return 45-f*(45-jointR.x); }
-  [20,45,65].forEach(y=>{
-    const xr = xRightAt(y);
-    tube({x:-xr,y}, {x:xr,y}, height, 0.7, woodMat, group);
-  });
-}
 
-function buildSlab(shapePts, yBottom, thickness, mat){
-  const shape = new THREE.Shape(shapePts.map(p=>new THREE.Vector2(p.x,p.y)));
-  const geo = new THREE.ExtrudeGeometry(shape, {depth:thickness, bevelEnabled:false});
-  // ExtrudeGeometry builds in local (x, y, z:0..thickness). rotateX(+90deg) maps that to
-  // world (x, -z, y) i.e. world depth(Z) = +y (matches the walls, which use p.y directly as world Z).
-  // Using -90deg here previously made world Z = -y, mirroring floor/roof relative to the walls.
-  geo.rotateX(Math.PI/2);
-  geo.translate(0, yBottom+thickness, 0);
-  return new THREE.Mesh(geo, mat);
-}
-function buildFoamCeiling(footprintPts, ceilingY, group){
-  const spacing = 4.4, pyrH = 4, pyrR = spacing/2*0.95;
-  const baseGeo = new THREE.ConeGeometry(pyrR, pyrH, 4);
-  baseGeo.rotateY(Math.PI/4); // square the pyramid to the grid
-  baseGeo.rotateX(Math.PI);  // apex points down into the room
-  const xs=[]; for(let x=-44;x<=44;x+=spacing) xs.push(x);
-  const ys=[]; for(let y=4;y<=82;y+=spacing) ys.push(y);
-  const cells=[];
-  xs.forEach(x=>ys.forEach(y=>{ if(pointInPoly(x,y,footprintPts)) cells.push({x,y}); }));
-  const inst = new THREE.InstancedMesh(baseGeo, foamMat, Math.max(cells.length,1));
-  const dummy = new THREE.Object3D();
-  cells.forEach((c,i)=>{
-    dummy.position.set(c.x, ceilingY-pyrH/2, c.y);
-    dummy.updateMatrix();
-    inst.setMatrixAt(i, dummy.matrix);
-  });
-  inst.count = cells.length;
-  group.add(inst);
-}
+    function quad(p0, p1, h0, h1, mat) {
+      const geo = new THREE.BufferGeometry();
+      const v = new Float32Array([
+        p0.x, h0, p0.y, p1.x, h0, p1.y, p1.x, h1, p1.y,
+        p0.x, h0, p0.y, p1.x, h1, p1.y, p0.x, h1, p0.y
+      ]);
+      geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
+      geo.computeVertexNormals();
+      return new THREE.Mesh(geo, mat);
+    }
 
+    function buildScene(modeKey, height, showDoor, showCasters, showCeiling, floorThickness, doorW) {
+      while (rig.children.length) rig.children.pop();
+      const front = modes[modeKey]();
 
-function addCaster(group,p,floorBottomY){
-  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(CASTER_R,CASTER_R,1.6,16), wheelMat);
-  wheel.rotation.z = Math.PI/2;
-  wheel.position.set(p.x, floorBottomY-CASTER_R, p.y);
-  group.add(wheel);
-  const plate = new THREE.Mesh(new THREE.BoxGeometry(3.5,1.2,3.5), plateMat);
-  plate.position.set(p.x, floorBottomY+0.6, p.y);
-  group.add(plate);
-}
+      // perimeter for floor shape: back-left, back-right, then front points (right->left order needs correct winding)
+      const backL = { x: -HALFCHORD, y: 0 }, backR = { x: HALFCHORD, y: 0 };
+      const sideR0 = { x: HALFCHORD, y: BACK_DEPTH }, sideL0 = { x: -HALFCHORD, y: BACK_DEPTH };
 
-function quad(p0,p1,h0,h1,mat){
-  const geo = new THREE.BufferGeometry();
-  const v = new Float32Array([
-    p0.x,h0,p0.y,  p1.x,h0,p1.y,  p1.x,h1,p1.y,
-    p0.x,h0,p0.y,  p1.x,h1,p1.y,  p0.x,h1,p0.y
-  ]);
-  geo.setAttribute('position', new THREE.BufferAttribute(v,3));
-  geo.computeVertexNormals();
-  return new THREE.Mesh(geo, mat);
-}
+      // wall-line shape (top view) — true footprint, used for walls/foam-clip
+      // front[] runs left-to-right (front[0]=left bow end ≈ sideL0, front[last]=right bow end ≈ sideR0)
+      // perimeter must run sideR0 -> (front interior points, right-to-left) -> sideL0, so reverse it here
+      const shapePts = [backL, backR, sideR0, ...front.slice(1, -1).reverse(), sideL0];
+      // floor gets a small overhang lip beyond the wall line, so it fully covers the structure
+      const overhangPts = offsetPolygon(shapePts, OVERHANG);
 
-function buildScene(modeKey, height, showDoor, showCasters, showCeiling, floorThickness, doorW){
-  while(rig.children.length) rig.children.pop();
-  const front = modes[modeKey]();
+      // floor: thick torsion-box style (user wants 5-6" of structural depth, vs the old thin 3" slab)
+      const floor = buildSlab(overhangPts, -floorThickness, floorThickness, floorMat);
+      rig.add(floor);
 
-  // perimeter for floor shape: back-left, back-right, then front points (right->left order needs correct winding)
-  const backL = {x:-HALFCHORD,y:0}, backR = {x:HALFCHORD,y:0};
-  const sideR0 = {x:HALFCHORD,y:BACK_DEPTH}, sideL0 = {x:-HALFCHORD,y:BACK_DEPTH};
+      if (showCeiling) {
+        // top stays light: thin split plywood cap on a few sticks, not a heavy frame
+        buildLightTop(shapePts, height, rig);
+        buildFoamCeiling(shapePts, height, rig);
+      }
 
-  // wall-line shape (top view) — true footprint, used for walls/foam-clip
-  // front[] runs left-to-right (front[0]=left bow end ≈ sideL0, front[last]=right bow end ≈ sideR0)
-  // perimeter must run sideR0 -> (front interior points, right-to-left) -> sideL0, so reverse it here
-  const shapePts = [backL, backR, sideR0, ...front.slice(1,-1).reverse(), sideL0];
-  // floor gets a small overhang lip beyond the wall line, so it fully covers the structure
-  const overhangPts = offsetPolygon(shapePts, OVERHANG);
+      // back wall
+      rig.add(quad(backL, backR, 0, height, woodMat));
+      // right side wall — polycarbonate with door; hinge at back corner (backR), door width = doorW
+      // (2x2 posts at hinge corner, jamb, and sideR0 are built inside this function)
+      buildRightPolyWallWithDoor(backR, sideR0, height, showDoor, doorW, rig);
+      // left side wall — polycarbonate, with 2x2 posts at both ends
+      rig.add(quad(backL, sideL0, 0, height, polyMat));
+      const studSize = 1.5;
+      [backL, sideL0].forEach(p => {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
+        post.position.set(p.x + studSize / 2, height / 2, p.y + (p.y === 0 ? studSize / 2 : -studSize / 2));
+        rig.add(post);
+      });
 
-  // floor: thick torsion-box style (user wants 5-6" of structural depth, vs the old thin 3" slab)
-  const floor = buildSlab(overhangPts, -floorThickness, floorThickness, floorMat);
-  rig.add(floor);
+      // casters at all 6 hexagon corners
+      if (showCasters) {
+        shapePts.forEach(p => addCaster(rig, p, -floorThickness));
+      }
 
-  if(showCeiling){
-    // top stays light: thin split plywood cap on a few sticks, not a heavy frame
-    buildLightTop(shapePts, height, rig);
-    buildFoamCeiling(shapePts, height, rig);
-  }
+      // front panels + their corner posts
+      for (let i = 0; i < front.length - 1; i++) {
+        let p0 = front[i], p1 = front[i + 1];
+        rig.add(quad(p0, p1, 0, height, polyMat));
+        rig.add(new THREE.Mesh(new THREE.BoxGeometry(2.5, height, 2.5), frameMat).translateX(p0.x).translateY(height / 2).translateZ(p0.y));
+      }
+      // back wall corner posts (backL and backR)
+      [backL, backR].forEach(p => {
+        rig.add(new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat).translateX(p.x + (p.x < 0 ? studSize / 2 : -studSize / 2)).translateY(height / 2).translateZ(p.y + studSize / 2));
+      });
 
-  // back wall
-  rig.add(quad(backL, backR, 0, height, woodMat));
-  // right side wall — polycarbonate with door; hinge at back corner (backR), door width = doorW
-  // (2x2 posts at hinge corner, jamb, and sideR0 are built inside this function)
-  buildRightPolyWallWithDoor(backR, sideR0, height, showDoor, doorW, rig);
-  // left side wall — polycarbonate, with 2x2 posts at both ends
-  rig.add(quad(backL, sideL0, 0, height, polyMat));
-  const studSize = 1.5;
-  [backL, sideL0].forEach(p=>{
-    const post = new THREE.Mesh(new THREE.BoxGeometry(studSize, height, studSize), frameMat);
-    post.position.set(p.x + studSize/2, height/2, p.y + (p.y===0 ? studSize/2 : -studSize/2));
-    rig.add(post);
-  });
+      document.getElementById('specs').innerHTML = buildSpecsHTML(modeKey, height);
+      document.getElementById('bom').innerHTML = buildBOM(height, floorThickness, doorW);
+    }
 
-  // casters at all 6 hexagon corners
-  if(showCasters){
-    shapePts.forEach(p=>addCaster(rig,p,-floorThickness));
-  }
-
-  // front panels + their corner posts
-  for(let i=0;i<front.length-1;i++){
-    let p0=front[i], p1=front[i+1];
-    rig.add(quad(p0,p1,0,height, polyMat));
-    rig.add(new THREE.Mesh(new THREE.BoxGeometry(2.5,height,2.5), frameMat).translateX(p0.x).translateY(height/2).translateZ(p0.y));
-  }
-  // back wall corner posts (backL and backR)
-  [backL, backR].forEach(p=>{
-    rig.add(new THREE.Mesh(new THREE.BoxGeometry(studSize,height,studSize), frameMat).translateX(p.x+(p.x<0?studSize/2:-studSize/2)).translateY(height/2).translateZ(p.y+studSize/2));
-  });
-
-  document.getElementById('specs').innerHTML = buildSpecsHTML(modeKey, height);
-  document.getElementById('bom').innerHTML = buildBOM(height, floorThickness, doorW);
-}
-
-function buildSpecsHTML(modeKey,height){
-  const labelMap = {"343":"3 ft – 4 ft – 3 ft", "262":"2 ft – 6 ft – 2 ft", "curve":"Original single bent sheet"};
-  let rows = `
+    function buildSpecsHTML(modeKey, height) {
+      const labelMap = { "343": "3 ft – 4 ft – 3 ft", "262": "2 ft – 6 ft – 2 ft", "curve": "Original single bent sheet" };
+      let rows = `
     <table>
       <tr><td class="k">Mode</td><td>${labelMap[modeKey]}</td></tr>
       <tr><td class="k">Interior back-wall width</td><td>90"</td></tr>
@@ -499,62 +661,64 @@ function buildSpecsHTML(modeKey,height){
       <tr><td class="k">Total front material if one curved sheet</td><td>120" (10 ft)</td></tr>
       <tr><td class="k">Cage height (set above)</td><td>${height}"</td></tr>
     </table>`;
-  if(modeKey==='343'){
-    rows += `<h2>3' - 4' - 3' panel breakdown (all flat — no bending)</h2><table>
-      <tr><td class="k">Side shield (x2) — flat chord</td><td>35.1" (cut from 36" material)</td></tr>
-      <tr><td class="k">Center shield — flat chord</td><td>45.95" (cut from 48" material — standard 4ft sheet width!)</td></tr>
-      <tr><td class="k">Resulting front depth</td><td>75.36" (slightly less than the true 81.35" bow apex, since all 3 panels are flat chords)</td></tr>
+      if (modeKey === '343') {
+        rows += `<h2>3' - 4' - 3' panel breakdown (all flat — no bending)</h2><table>
+      <tr><td class="k">Side shields (x2) — order width</td><td>36" — routed into stud grooves, no width trim needed</td></tr>
+      <tr><td class="k">Center shield — order width</td><td>48" — full sheet, no width trim needed</td></tr>
+      <tr><td class="k">All front shield edge cuts</td><td>Square (90°) on all edges — the routed channel in the stud handles the corner angle, no miter cuts required</td></tr>
+      <tr><td class="k">Resulting front depth</td><td>75.36" (flat chord geometry; routed groove adds ~¼"–½" engagement per side)</td></tr>
       <tr><td class="k">Angle: side panel to back side-wall</td><td>≈39° off vertical</td></tr>
       <tr><td class="k">Angle: side panel to center panel</td><td>≈129° interior</td></tr>
     </table>
     <p class="note">This is the recommended split: every shield is cut perfectly flat, no bending or heat-forming needed anywhere. The 48" center piece matches a standard 4ft-wide polycarbonate sheet exactly.</p>`;
-  } else if(modeKey==='262'){
-    rows += `<h2>2' - 6' - 2' panel breakdown (all flat — no bending)</h2><table>
-      <tr><td class="k">Side shield (x2) — flat chord</td><td>23.8" (cut from 24" material)</td></tr>
-      <tr><td class="k">Center shield — flat chord</td><td>65.2" (cut from 72" material — 6ft-wide stock, less common/pricier)</td></tr>
+      } else if (modeKey === '262') {
+        rows += `<h2>2' - 6' - 2' panel breakdown (all flat — no bending)</h2><table>
+      <tr><td class="k">Side shields (x2) — order width</td><td>24" — routed into stud grooves, no width trim needed</td></tr>
+      <tr><td class="k">Center shield — order width</td><td>72" (6ft-wide stock, less common/pricier) — or 48" if routed grooves are deep enough to take up the slack</td></tr>
+      <tr><td class="k">All front shield edge cuts</td><td>Square (90°) on all edges — routed channel handles the angle</td></tr>
     </table>
     <p class="note">Bigger uninterrupted center view, and still no bending needed — but the 72"-wide center sheet is special-order at most suppliers (standard stock is 48" wide), so it's really a sourcing/cost decision vs the 3-4-3 split.</p>`;
-  } else {
-    rows += `<p class="note">This is the original single-piece bow: one 120" long sheet bent across the full 90" chord with a 33.354" sagitta. Hardest to source/bend/transport — this is what you're replacing.</p>`;
-  }
-  return rows;
-}
+      } else {
+        rows += `<p class="note">This is the original single-piece bow: one 120" long sheet bent across the full 90" chord with a 33.354" sagitta. Hardest to source/bend/transport — this is what you're replacing.</p>`;
+      }
+      return rows;
+    }
 
-function buildBOM(height, floorThickness, doorW){
-  doorW = doorW || DEFAULT_DOOR_W;
-  const doorH = Math.min(78,height-2);
-  const FRONT_LEN = 120; // total front material length, in
-  const POLY_WALL_LEN = 48*2; // BOTH side walls are now polycarbonate (left + right), in
-  const SOLID_WALL_PERIM = 90; // back wall only — the ONLY remaining plywood wall
-  const FLOOR_FT2 = 45.3; // computed from footprint (rect 90x48 + bow segment)
-  const wallFt2 = (SOLID_WALL_PERIM*height)/144; // back wall only
-  // floor is now a thick torsion box: top deck + bottom skin, both plywood. No roof plywood anymore.
-  const totalSheathingFt2 = 2*FLOOR_FT2 + wallFt2;
-  const PLY_SHEET_FT2_USABLE = 28; // 4x8=32ft2, derate for waste/kerf
-  const plySheets = Math.ceil(totalSheathingFt2/PLY_SHEET_FT2_USABLE);
+    function buildBOM(height, floorThickness, doorW) {
+      doorW = doorW || DEFAULT_DOOR_W;
+      const doorH = Math.min(78, height - 2);
+      const FRONT_LEN = 120; // total front material length, in
+      const POLY_WALL_LEN = 48 * 2; // BOTH side walls are now polycarbonate (left + right), in
+      const SOLID_WALL_PERIM = 90; // back wall only — the ONLY remaining plywood wall
+      const FLOOR_FT2 = 45.3; // computed from footprint (rect 90x48 + bow segment)
+      const wallFt2 = (SOLID_WALL_PERIM * height) / 144; // back wall only
+      // floor is now a thick torsion box: top deck + bottom skin, both plywood. No roof plywood anymore.
+      const totalSheathingFt2 = 2 * FLOOR_FT2 + wallFt2;
+      const PLY_SHEET_FT2_USABLE = 28; // 4x8=32ft2, derate for waste/kerf
+      const plySheets = Math.ceil(totalSheathingFt2 / PLY_SHEET_FT2_USABLE);
 
-  // wall/door framing — perimeter plates + posts; poly walls only need perimeter framing
-  const postsFtAll = 8*height/12;
-  const plateFt = 2*(SOLID_WALL_PERIM+POLY_WALL_LEN+FRONT_LEN)/12; // top + bottom track around full perimeter
-  const doorFrameFt = (2*doorH+doorW)/12;
-  const wallFramingTotalFt = postsFtAll + plateFt + doorFrameFt;
-  const wallFramingBoards8ft = Math.ceil(wallFramingTotalFt/8);
+      // wall/door framing — perimeter plates + posts; poly walls only need perimeter framing
+      const postsFtAll = 8 * height / 12;
+      const plateFt = 2 * (SOLID_WALL_PERIM + POLY_WALL_LEN + FRONT_LEN) / 12; // top + bottom track around full perimeter
+      const doorFrameFt = (2 * doorH + doorW) / 12;
+      const wallFramingTotalFt = postsFtAll + plateFt + doorFrameFt;
+      const wallFramingBoards8ft = Math.ceil(wallFramingTotalFt / 8);
 
-  // polycarbonate: 3 front shields + left side wall + right side wall (incl. door panel)
-  const polyFt2 = ((FRONT_LEN + POLY_WALL_LEN)*height/144);
+      // polycarbonate: 3 front shields + left side wall + right side wall (incl. door panel)
+      const polyFt2 = ((FRONT_LEN + POLY_WALL_LEN) * height / 144);
 
-  // floor framing — deep lumber sized to the chosen floor thickness, built ONCE (the floor only; the top is lightweight)
-  const rimSumFt = 25.2;   // perimeter rim (6 mitered segments), from the framing plan
-  const joistSumFt = 45.3; // 4 cross joists + 3 longitudinal members, from the framing plan
-  const floorFramingTotalFt = rimSumFt + joistSumFt;
-  const floorFramingBoards8ft = Math.ceil(floorFramingTotalFt/8);
-  const lumberSize = floorThickness<=3.5?'2x4 (3.5" actual)':floorThickness<=5.5?'2x6 (5.5" actual)':floorThickness<=7.25?'2x8 (7.25" actual)':'2x10 (9.25" actual)';
+      // floor framing — deep lumber sized to the chosen floor thickness, built ONCE (the floor only; the top is lightweight)
+      const rimSumFt = 25.2;   // perimeter rim (6 mitered segments), from the framing plan
+      const joistSumFt = 45.3; // 4 cross joists + 3 longitudinal members, from the framing plan
+      const floorFramingTotalFt = rimSumFt + joistSumFt;
+      const floorFramingBoards8ft = Math.ceil(floorFramingTotalFt / 8);
+      const lumberSize = floorThickness <= 3.5 ? '2x4 (3.5" actual)' : floorThickness <= 5.5 ? '2x6 (5.5" actual)' : floorThickness <= 7.25 ? '2x8 (7.25" actual)' : '2x10 (9.25" actual)';
 
-  // lightweight split top panel (thin plywood, cut in half down the centerline) + a few support sticks
-  const TOP_FT2 = 45.3; // same footprint as the floor/foam coverage
-  const stickLenFt = (90+90+62.62)/12; // 3 cross-beam sticks at y=20",45",65", spanning side-to-side at ceiling height
+      // lightweight split top panel (thin plywood, cut in half down the centerline) + a few support sticks
+      const TOP_FT2 = 45.3; // same footprint as the floor/foam coverage
+      const stickLenFt = (90 + 90 + 62.62) / 12; // 3 cross-beam sticks at y=20",45",65", spanning side-to-side at ceiling height
 
-  return `
+      return `
   <table>
     <tr><td class="k">Cage height used for this estimate</td><td>${height}"</td></tr>
     <tr><td class="k">Floor thickness used for this estimate</td><td>${floorThickness}"</td></tr>
@@ -562,7 +726,7 @@ function buildBOM(height, floorThickness, doorW){
   <h2>Floor — thick torsion-box base (5–6"+ deep, for mass/sound isolation)</h2>
   <table>
     <tr><td class="k">Floor framing lumber</td><td><b>${lumberSize}</b>, ${floorFramingBoards8ft} boards @ 8ft (≈${floorFramingTotalFt.toFixed(0)} linear ft — rim ${rimSumFt}ft + joists/runners ${joistSumFt}ft, see framing plan)</td></tr>
-    <tr><td class="k">3/4" plywood — top deck + bottom skin</td><td>part of the ${plySheets}-sheet total below; ≈${(2*FLOOR_FT2).toFixed(0)} ft² just for the floor's two skins</td></tr>
+    <tr><td class="k">3/4" plywood — top deck + bottom skin</td><td>part of the ${plySheets}-sheet total below; ≈${(2 * FLOOR_FT2).toFixed(0)} ft² just for the floor's two skins</td></tr>
     <tr><td class="k">Mineral wool / rockwool insulation</td><td>fills the ${floorThickness}"-deep cavity between top/bottom skins, ≈${Math.ceil(FLOOR_FT2)} ft² coverage</td></tr>
     <tr><td class="k">Construction adhesive + screws (skins to frame)</td><td>1 tube + 1 box 1-1/4" screws</td></tr>
   </table>
@@ -587,7 +751,7 @@ function buildBOM(height, floorThickness, doorW){
     <tr><td class="k">2x2 stud posts — door frame (3 total)</td><td>1× hinge post (at back corner, full height ${height}" — hinges bolt to this) + 1× jamb post (at y=${doorW}", door stop &amp; fixed-panel edge, full height) + 1× far-end post (at sideR0). All 1.5"×1.5" actual.</td></tr>
     <tr><td class="k">Hinges (3, heavy-duty)</td><td>3× screwed into the hinge-side 2x2 post at the back corner — door swings outward</td></tr>
     <tr><td class="k">Handle / latch</td><td>1× pull handle + 1× latch, on the free end (jamb side)</td></tr>
-    <tr><td class="k">Polycarbonate door frame / edge channel</td><td>≈${Math.ceil(2*doorH+doorW)}" U-channel around door edges for stiffness &amp; sound seal</td></tr>
+    <tr><td class="k">Polycarbonate door frame / edge channel</td><td>≈${Math.ceil(2 * doorH + doorW)}" U-channel around door edges for stiffness &amp; sound seal</td></tr>
   </table>
   <h2>Casters &amp; hardware</h2>
   <table>
@@ -600,238 +764,236 @@ function buildBOM(height, floorThickness, doorW){
     <tr><td class="k">Edge banding (plywood edges, optional)</td><td>per linear ft of exposed ply edge</td></tr>
     <tr><td class="k">Finish (stain/poly or paint, optional)</td><td>1 qt–1 gal depending on look</td></tr>
   </table>`;
-}
+    }
 
-// ---------- Detailed framing plan (base = roof, identical) ----------
-function drawFramingPlan(){
-  const svg = document.getElementById('framingSvg');
-  const pts343 = splitToPoints([3,4,3]);
-  const backL={x:-45,y:0}, backR={x:45,y:0}, sideL0={x:-45,y:48}, sideR0={x:45,y:48};
-  const jointL = pts343[1], jointR = pts343[2]; // {x:-22.98,y:75.36}, {x:22.97,y:75.36}
-  const scale=4.6, ox=450, oy=520;
-  const X = x=>ox+x*scale; const Y = y=>oy-y*scale;
+    // ---------- Detailed framing plan (base = roof, identical) ----------
+    function drawFramingPlan() {
+      const svg = document.getElementById('framingSvg');
+      const pts343 = splitToPoints([3, 4, 3]);
+      const backL = { x: -45, y: 0 }, backR = { x: 45, y: 0 }, sideL0 = { x: -45, y: 48 }, sideR0 = { x: 45, y: 48 };
+      const jointL = pts343[1], jointR = pts343[2]; // {x:-22.98,y:75.36}, {x:22.97,y:75.36}
+      const scale = 4.6, ox = 450, oy = 520;
+      const X = x => ox + x * scale; const Y = y => oy - y * scale;
 
-  const rim = [backL,backR,sideR0,jointR,jointL,sideL0];
-  const rimLens = rim.map((p,i)=>chordLen(p, rim[(i+1)%rim.length]));
-  const rimAngles = [90,90,141.2,128.8,128.8,141.2]; // interior angle at backL,backR,sideR0,jointR,jointL,sideL0
+      const rim = [backL, backR, sideR0, jointR, jointL, sideL0];
+      const rimLens = rim.map((p, i) => chordLen(p, rim[(i + 1) % rim.length]));
+      const rimAngles = [90, 90, 141.2, 128.8, 128.8, 141.2]; // interior angle at backL,backR,sideR0,jointR,jointL,sideL0
 
-  function xRightAt(y){ if(y<=48) return 45; const f=(y-48)/(75.36-48); return 45-f*(45-jointR.x); }
-  const rows = [16,32,48,64].map(y=>({y, xL:-xRightAt(y), xR:xRightAt(y)}));
-  function maxYAtX(x){ if(Math.abs(x)<=jointR.x) return 75.36; const f=(45-Math.abs(x))/(45-jointR.x); return 48+f*(75.36-48); }
-  const cols = [-30,0,30].map(x=>({x, yMax:maxYAtX(x)}));
+      function xRightAt(y) { if (y <= 48) return 45; const f = (y - 48) / (75.36 - 48); return 45 - f * (45 - jointR.x); }
+      const rows = [16, 32, 48, 64].map(y => ({ y, xL: -xRightAt(y), xR: xRightAt(y) }));
+      function maxYAtX(x) { if (Math.abs(x) <= jointR.x) return 75.36; const f = (45 - Math.abs(x)) / (45 - jointR.x); return 48 + f * (75.36 - 48); }
+      const cols = [-30, 0, 30].map(x => ({ x, yMax: maxYAtX(x) }));
 
-  let s = `<rect width="900" height="560" fill="#181b18"/>`;
-  let rimPath = rim.map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ')+' Z';
-  s += `<path d="${rimPath}" fill="none" stroke="#e8b84b" stroke-width="4"/>`;
-  rim.forEach((p,i)=>{
-    const p2 = rim[(i+1)%rim.length];
-    const mx=(p.x+p2.x)/2, my=(p.y+p2.y)/2;
-    const dx=p2.x-p.x, dy=p2.y-p.y, len=Math.hypot(dx,dy);
-    const nx=-dy/len, ny=dx/len;
-    const ox2=mx+nx*7, oy2=my+ny*7;
-    s += `<text x="${X(ox2)}" y="${Y(oy2)}" font-size="12.5" fill="#e8b84b" text-anchor="middle">${rimLens[i].toFixed(1)}"</text>`;
-  });
-  rim.forEach((p,i)=>{
-    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="#fff"/>`;
-    s += `<text x="${X(p.x)}" y="${Y(p.y)+(p.y<40?-12:18)}" font-size="11.5" fill="#9aa39a" text-anchor="middle">${rimAngles[i]}°</text>`;
-  });
-  rows.forEach(r=>{
-    s += `<line x1="${X(r.xL)}" y1="${Y(r.y)}" x2="${X(r.xR)}" y2="${Y(r.y)}" stroke="#5d4527" stroke-width="5"/>`;
-    s += `<text x="${X(r.xR)+10}" y="${Y(r.y)+4}" font-size="11.5" fill="#bcd6da" text-anchor="start">y=${r.y}": ${(r.xR-r.xL).toFixed(1)}" long</text>`;
-  });
-  cols.forEach(c=>{
-    s += `<line x1="${X(c.x)}" y1="${Y(0)}" x2="${X(c.x)}" y2="${Y(c.yMax)}" stroke="#7a5a36" stroke-width="5"/>`;
-    s += `<text x="${X(c.x)}" y="${Y(c.yMax)-10}" font-size="11.5" fill="#c9a876" text-anchor="middle">x=${c.x}": ${c.yMax.toFixed(1)}" long</text>`;
-  });
-  s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">gold = perimeter rim (mitered)   dark brown = cross joists (parallel to back wall)   light brown = longitudinal members (front-to-back)</text>`;
-  svg.innerHTML = s;
+      let s = `<rect width="900" height="560" fill="#181b18"/>`;
+      let rimPath = rim.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.x)},${Y(p.y)}`).join(' ') + ' Z';
+      s += `<path d="${rimPath}" fill="none" stroke="#e8b84b" stroke-width="4"/>`;
+      rim.forEach((p, i) => {
+        const p2 = rim[(i + 1) % rim.length];
+        const mx = (p.x + p2.x) / 2, my = (p.y + p2.y) / 2;
+        const dx = p2.x - p.x, dy = p2.y - p.y, len = Math.hypot(dx, dy);
+        const nx = -dy / len, ny = dx / len;
+        const ox2 = mx + nx * 7, oy2 = my + ny * 7;
+        s += `<text x="${X(ox2)}" y="${Y(oy2)}" font-size="12.5" fill="#e8b84b" text-anchor="middle">${rimLens[i].toFixed(1)}"</text>`;
+      });
+      rim.forEach((p, i) => {
+        s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="#fff"/>`;
+        s += `<text x="${X(p.x)}" y="${Y(p.y) + (p.y < 40 ? -12 : 18)}" font-size="11.5" fill="#9aa39a" text-anchor="middle">${rimAngles[i]}°</text>`;
+      });
+      rows.forEach(r => {
+        s += `<line x1="${X(r.xL)}" y1="${Y(r.y)}" x2="${X(r.xR)}" y2="${Y(r.y)}" stroke="#5d4527" stroke-width="5"/>`;
+        s += `<text x="${X(r.xR) + 10}" y="${Y(r.y) + 4}" font-size="11.5" fill="#bcd6da" text-anchor="start">y=${r.y}": ${(r.xR - r.xL).toFixed(1)}" long</text>`;
+      });
+      cols.forEach(c => {
+        s += `<line x1="${X(c.x)}" y1="${Y(0)}" x2="${X(c.x)}" y2="${Y(c.yMax)}" stroke="#7a5a36" stroke-width="5"/>`;
+        s += `<text x="${X(c.x)}" y="${Y(c.yMax) - 10}" font-size="11.5" fill="#c9a876" text-anchor="middle">x=${c.x}": ${c.yMax.toFixed(1)}" long</text>`;
+      });
+      s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">gold = perimeter rim (mitered)   dark brown = cross joists (parallel to back wall)   light brown = longitudinal members (front-to-back)</text>`;
+      svg.innerHTML = s;
 
-  let html = `<table><tr><td class="k">Member</td><td>Qty</td><td>Length</td><td>Notes</td></tr>`;
-  const rimNames=["Back wall rim","Right side rim","Right shield rim","Center shield rim","Left shield rim","Left side rim"];
-  rim.forEach((p,i)=>{
-    html += `<tr><td class="k">${rimNames[i]}</td><td>1</td><td>${rimLens[i].toFixed(1)}"</td><td>miter both ends to ${(180-rimAngles[i]).toFixed(1)}° off straight, interior angle ${rimAngles[i]}° — use lumber on edge matching your floor-thickness setting</td></tr>`;
-  });
-  rows.forEach(r=>{
-    html += `<tr><td class="k">Cross joist @ ${r.y}" from back</td><td>1</td><td>${(r.xR-r.xL).toFixed(1)}"</td><td>square cut, parallel to back wall</td></tr>`;
-  });
-  cols.forEach(c=>{
-    html += `<tr><td class="k">Longitudinal @ x=${c.x}"</td><td>1</td><td>${c.yMax.toFixed(1)}"</td><td>runs from back rim toward front, trimmed to where it meets the rim</td></tr>`;
-  });
-  html += `<tr><td class="k">Caster blocking</td><td>6 (one per corner)</td><td>~6"×6" pad</td><td>doubled-up blocking under each of the 6 corners for caster screws</td></tr>`;
-  html += `</table>`;
-  document.getElementById('framingCutlist').innerHTML = html;
-}
+      let html = `<table><tr><td class="k">Member</td><td>Qty</td><td>Length</td><td>Notes</td></tr>`;
+      const rimNames = ["Back wall rim", "Right side rim", "Right shield rim", "Center shield rim", "Left shield rim", "Left side rim"];
+      rim.forEach((p, i) => {
+        html += `<tr><td class="k">${rimNames[i]}</td><td>1</td><td>${rimLens[i].toFixed(1)}"</td><td>miter both ends to ${(180 - rimAngles[i]).toFixed(1)}° off straight, interior angle ${rimAngles[i]}° — use lumber on edge matching your floor-thickness setting</td></tr>`;
+      });
+      rows.forEach(r => {
+        html += `<tr><td class="k">Cross joist @ ${r.y}" from back</td><td>1</td><td>${(r.xR - r.xL).toFixed(1)}"</td><td>square cut, parallel to back wall</td></tr>`;
+      });
+      cols.forEach(c => {
+        html += `<tr><td class="k">Longitudinal @ x=${c.x}"</td><td>1</td><td>${c.yMax.toFixed(1)}"</td><td>runs from back rim toward front, trimmed to where it meets the rim</td></tr>`;
+      });
+      html += `<tr><td class="k">Caster blocking</td><td>6 (one per corner)</td><td>~6"×6" pad</td><td>doubled-up blocking under each of the 6 corners for caster screws</td></tr>`;
+      html += `</table>`;
+      document.getElementById('framingCutlist').innerHTML = html;
+    }
 
-// ---------- Back wall framing elevation (height-dependent, redrawn on refresh) ----------
-function drawBackWallFraming(height){
-  const svg = document.getElementById('backWallSvg');
-  if(!svg) return;
-  const W = 90, plateT = 1.5, studH = height - 2*plateT;
-  // equal division: pick the number of bays that gets closest to 16" o.c., then space evenly (no leftover odd bay)
-  const targetSpacing = 16;
-  const bays = Math.round(W/targetSpacing);
-  const spacing = W/bays;
-  const studXs = []; for(let i=0;i<=bays;i++) studXs.push(i*spacing);
+    // ---------- Back wall framing elevation (height-dependent, redrawn on refresh) ----------
+    function drawBackWallFraming(height) {
+      const svg = document.getElementById('backWallSvg');
+      if (!svg) return;
+      const W = 90, plateT = 1.5, studH = height - 2 * plateT;
+      // equal division: pick the number of bays that gets closest to 16" o.c., then space evenly (no leftover odd bay)
+      const targetSpacing = 16;
+      const bays = Math.round(W / targetSpacing);
+      const spacing = W / bays;
+      const studXs = []; for (let i = 0; i <= bays; i++) studXs.push(i * spacing);
 
-  const scale=7, ox=70, oy=520;
-  const X = x=>ox+x*scale, Y = y=>oy-y*scale;
+      const scale = 7, ox = 70, oy = 520;
+      const X = x => ox + x * scale, Y = y => oy - y * scale;
 
-  let s = `<rect width="800" height="560" fill="#181b18"/>`;
-  s += `<rect x="${X(0)}" y="${Y(height)}" width="${W*scale}" height="${height*scale}" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
-  s += `<rect x="${X(0)}" y="${Y(plateT)}" width="${W*scale}" height="${plateT*scale}" fill="#7a5a36" stroke="#5d4527"/>`;
-  s += `<rect x="${X(0)}" y="${Y(height)}" width="${W*scale}" height="${plateT*scale}" fill="#7a5a36" stroke="#5d4527"/>`;
-  studXs.forEach(x=>{
-    s += `<rect x="${X(x)-3}" y="${Y(height-plateT)}" width="6" height="${studH*scale}" fill="#c9a876" stroke="#5d4527"/>`;
-    s += `<text x="${X(x)}" y="${Y(0)+16}" font-size="10" fill="#bcd6da" text-anchor="middle">${x}"</text>`;
-  });
-  for(let i=0;i<studXs.length-1;i++){
-    const mx=(studXs[i]+studXs[i+1])/2;
-    s += `<text x="${X(mx)}" y="${Y(height)-8}" font-size="10.5" fill="#9aa39a" text-anchor="middle">${(studXs[i+1]-studXs[i]).toFixed(1)}"</text>`;
-  }
-  s += `<text x="${X(W/2)}" y="${Y(height)-26}" font-size="13" fill="#e8b84b" text-anchor="middle">90" wide</text>`;
-  s += `<text x="${X(0)-40}" y="${Y(height/2)}" font-size="13" fill="#e8b84b" text-anchor="middle" transform="rotate(-90 ${X(0)-40} ${Y(height/2)})">${height}" tall</text>`;
-  s += `<text x="${X(W)+10}" y="${Y(height-plateT/2)+4}" font-size="10.5" fill="#bcd6da">${plateT}" top plate</text>`;
-  s += `<text x="${X(W)+10}" y="${Y(plateT/2)+4}" font-size="10.5" fill="#bcd6da">${plateT}" bottom plate</text>`;
-  s += `<text x="${X(W)+10}" y="${Y(height/2)}" font-size="10.5" fill="#c9a876">stud: ${studH.toFixed(1)}" long</text>`;
-  svg.innerHTML = s;
+      let s = `<rect width="800" height="560" fill="#181b18"/>`;
+      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * scale}" height="${height * scale}" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
+      s += `<rect x="${X(0)}" y="${Y(plateT)}" width="${W * scale}" height="${plateT * scale}" fill="#7a5a36" stroke="#5d4527"/>`;
+      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * scale}" height="${plateT * scale}" fill="#7a5a36" stroke="#5d4527"/>`;
+      studXs.forEach(x => {
+        s += `<rect x="${X(x) - 3}" y="${Y(height - plateT)}" width="6" height="${studH * scale}" fill="#c9a876" stroke="#5d4527"/>`;
+        s += `<text x="${X(x)}" y="${Y(0) + 16}" font-size="10" fill="#bcd6da" text-anchor="middle">${x}"</text>`;
+      });
+      for (let i = 0; i < studXs.length - 1; i++) {
+        const mx = (studXs[i] + studXs[i + 1]) / 2;
+        s += `<text x="${X(mx)}" y="${Y(height) - 8}" font-size="10.5" fill="#9aa39a" text-anchor="middle">${(studXs[i + 1] - studXs[i]).toFixed(1)}"</text>`;
+      }
+      s += `<text x="${X(W / 2)}" y="${Y(height) - 26}" font-size="13" fill="#e8b84b" text-anchor="middle">90" wide</text>`;
+      s += `<text x="${X(0) - 40}" y="${Y(height / 2)}" font-size="13" fill="#e8b84b" text-anchor="middle" transform="rotate(-90 ${X(0) - 40} ${Y(height / 2)})">${height}" tall</text>`;
+      s += `<text x="${X(W) + 10}" y="${Y(height - plateT / 2) + 4}" font-size="10.5" fill="#bcd6da">${plateT}" top plate</text>`;
+      s += `<text x="${X(W) + 10}" y="${Y(plateT / 2) + 4}" font-size="10.5" fill="#bcd6da">${plateT}" bottom plate</text>`;
+      s += `<text x="${X(W) + 10}" y="${Y(height / 2)}" font-size="10.5" fill="#c9a876">stud: ${studH.toFixed(1)}" long</text>`;
+      svg.innerHTML = s;
 
-  const html = `<table><tr><td class="k">Member</td><td>Qty</td><td>Length</td><td>Notes</td></tr>
+      const html = `<table><tr><td class="k">Member</td><td>Qty</td><td>Length</td><td>Notes</td></tr>
     <tr><td class="k">Bottom plate</td><td>1</td><td>90"</td><td>flat 2x lumber, screwed to the floor rim</td></tr>
     <tr><td class="k">Top plate</td><td>1</td><td>90"</td><td>flat 2x lumber, carries the light top panel's back edge</td></tr>
-    <tr><td class="k">Studs</td><td>${studXs.length}</td><td>${studH.toFixed(1)}" each</td><td>${bays} equal bays of ${spacing.toFixed(1)}" o.c., at x = ${studXs.map(x=>x.toFixed(1)+'"').join(', ')} from the left corner — no leftover odd bay</td></tr>
+    <tr><td class="k">Studs</td><td>${studXs.length}</td><td>${studH.toFixed(1)}" each</td><td>${bays} equal bays of ${spacing.toFixed(1)}" o.c., at x = ${studXs.map(x => x.toFixed(1) + '"').join(', ')} from the left corner — no leftover odd bay</td></tr>
   </table>`;
-  document.getElementById('backWallCutlist').innerHTML = html;
-}
+      document.getElementById('backWallCutlist').innerHTML = html;
+    }
 
-// ---------- Top measurement plan (split panel + 3-stick hanging frame) ----------
-function drawTopPlan(){
-  const svg = document.getElementById('topPlanSvg');
-  const pts343 = splitToPoints([3,4,3]);
-  const backL={x:-45,y:0}, backR={x:45,y:0}, sideL0={x:-45,y:48}, sideR0={x:45,y:48};
-  const jointL = pts343[1], jointR = pts343[2];
-  const scale=4.6, ox=450, oy=520;
-  const X = x=>ox+x*scale, Y = y=>oy-y*scale;
+    // ---------- Top measurement plan (split panel + 3-stick hanging frame) ----------
+    function drawTopPlan() {
+      const svg = document.getElementById('topPlanSvg');
+      const pts343 = splitToPoints([3, 4, 3]);
+      const backL = { x: -45, y: 0 }, backR = { x: 45, y: 0 }, sideL0 = { x: -45, y: 48 }, sideR0 = { x: 45, y: 48 };
+      const jointL = pts343[1], jointR = pts343[2];
+      const scale = 4.6, ox = 450, oy = 520;
+      const X = x => ox + x * scale, Y = y => oy - y * scale;
 
-  const rim = [backL,backR,sideR0,jointR,jointL,sideL0];
-  function xRightAt(y){ if(y<=48) return 45; const f=(y-48)/(jointL.y-48); return 45-f*(45-jointR.x); }
-  const beams = [20,45,65].map(y=>({y, xr:xRightAt(y)}));
+      const rim = [backL, backR, sideR0, jointR, jointL, sideL0];
+      function xRightAt(y) { if (y <= 48) return 45; const f = (y - 48) / (jointL.y - 48); return 45 - f * (45 - jointR.x); }
+      const beams = [20, 45, 65].map(y => ({ y, xr: xRightAt(y) }));
 
-  let s = `<rect width="900" height="560" fill="#181b18"/>`;
-  let rimPath = rim.map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ')+' Z';
-  s += `<path d="${rimPath}" fill="#e6c9a0" fill-opacity="0.15" stroke="#e8b84b" stroke-width="3"/>`;
-  // centerline seam (dashed)
-  s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(jointL.y)}" stroke="#e8b84b" stroke-width="2" stroke-dasharray="6 4"/>`;
-  // splice plates
-  [10,35,60].forEach(y=>{
-    s += `<rect x="${X(-4.5)}" y="${Y(y)-2}" width="${9*scale}" height="4" fill="#999" stroke="#555"/>`;
-    s += `<text x="${X(6)}" y="${Y(y)+4}" font-size="10.5" fill="#bcd6da">splice @ ${y}"</text>`;
-  });
-  // beams
-  beams.forEach(b=>{
-    s += `<line x1="${X(-b.xr)}" y1="${Y(b.y)}" x2="${X(b.xr)}" y2="${Y(b.y)}" stroke="#7a5a36" stroke-width="6"/>`;
-    s += `<text x="${X(b.xr)+8}" y="${Y(b.y)+4}" font-size="11.5" fill="#c9a876">y=${b.y}": ${(2*b.xr).toFixed(1)}" long</text>`;
-  });
-  // half labels
-  s += `<text x="${X(-25)}" y="${Y(60)}" font-size="13" fill="#e8b84b" text-anchor="middle">LEFT half</text>`;
-  s += `<text x="${X(-25)}" y="${Y(60)-16}" font-size="11.5" fill="#bcd6da" text-anchor="middle">≈22.6 ft²</text>`;
-  s += `<text x="${X(25)}" y="${Y(60)}" font-size="13" fill="#e8b84b" text-anchor="middle">RIGHT half</text>`;
-  s += `<text x="${X(25)}" y="${Y(60)-16}" font-size="11.5" fill="#bcd6da" text-anchor="middle">≈22.6 ft²</text>`;
-  s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">gold outline = panel footprint   dashed = center seam   grey bars = splice plates   brown = the 3 stick beams</text>`;
-  svg.innerHTML = s;
+      let s = `<rect width="900" height="560" fill="#181b18"/>`;
+      let rimPath = rim.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.x)},${Y(p.y)}`).join(' ') + ' Z';
+      s += `<path d="${rimPath}" fill="#e6c9a0" fill-opacity="0.15" stroke="#e8b84b" stroke-width="3"/>`;
+      // centerline seam (dashed)
+      s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(jointL.y)}" stroke="#e8b84b" stroke-width="2" stroke-dasharray="6 4"/>`;
+      // splice plates
+      [10, 35, 60].forEach(y => {
+        s += `<rect x="${X(-4.5)}" y="${Y(y) - 2}" width="${9 * scale}" height="4" fill="#999" stroke="#555"/>`;
+        s += `<text x="${X(6)}" y="${Y(y) + 4}" font-size="10.5" fill="#bcd6da">splice @ ${y}"</text>`;
+      });
+      // beams
+      beams.forEach(b => {
+        s += `<line x1="${X(-b.xr)}" y1="${Y(b.y)}" x2="${X(b.xr)}" y2="${Y(b.y)}" stroke="#7a5a36" stroke-width="6"/>`;
+        s += `<text x="${X(b.xr) + 8}" y="${Y(b.y) + 4}" font-size="11.5" fill="#c9a876">y=${b.y}": ${(2 * b.xr).toFixed(1)}" long</text>`;
+      });
+      // half labels
+      s += `<text x="${X(-25)}" y="${Y(60)}" font-size="13" fill="#e8b84b" text-anchor="middle">LEFT half</text>`;
+      s += `<text x="${X(-25)}" y="${Y(60) - 16}" font-size="11.5" fill="#bcd6da" text-anchor="middle">≈22.6 ft²</text>`;
+      s += `<text x="${X(25)}" y="${Y(60)}" font-size="13" fill="#e8b84b" text-anchor="middle">RIGHT half</text>`;
+      s += `<text x="${X(25)}" y="${Y(60) - 16}" font-size="11.5" fill="#bcd6da" text-anchor="middle">≈22.6 ft²</text>`;
+      s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">gold outline = panel footprint   dashed = center seam   grey bars = splice plates   brown = the 3 stick beams</text>`;
+      svg.innerHTML = s;
 
-  let html = `<table><tr><td class="k">Item</td><td>Qty</td><td>Size</td><td>Notes</td></tr>
+      let html = `<table><tr><td class="k">Item</td><td>Qty</td><td>Size</td><td>Notes</td></tr>
     <tr><td class="k">Top panel, left half</td><td>1</td><td>≈22.6 ft² (45" back edge tapering to the seam)</td><td>1/4"–3/8" lightweight plywood/door-skin</td></tr>
     <tr><td class="k">Top panel, right half</td><td>1</td><td>≈22.6 ft² (mirror of left)</td><td>same material</td></tr>
     <tr><td class="k">Splice plates</td><td>3</td><td>~9"x2.5"</td><td>at 10", 35", 60" from the back wall, bolted/screwed across the seam</td></tr>`;
-  beams.forEach(b=>{
-    html += `<tr><td class="k">Stick beam @ y=${b.y}" from back</td><td>1</td><td>${(2*b.xr).toFixed(1)}"</td><td>rests on the wall top plates at both ends</td></tr>`;
-  });
-  html += `</table>`;
-  document.getElementById('topPlanCutlist').innerHTML = html;
-}
-
-// ---------- Polycarbonate cut list ----------
-function drawPolyCutList(height, doorW){
-  const svg = document.getElementById('polySvg');
-  const cutList = document.getElementById('polyCutList');
-  if(!svg||!cutList) return;
-  doorW = doorW || 28;
-  const doorH = Math.min(78, height-2);
-  const JAMB_POST_W = 1.5; // actual width of the 2x2 jamb stud that sits between door and fixed panel
-  const fixedPanelW = Math.round(48 - doorW - JAMB_POST_W); // = 19" for 28" door, 23" for 24" door
-
-  // All 7 pieces
-  const pieces = [
-    {id:'L-SIDE', name:'Left side wall',       mat:'Polycarbonate',  w:48,        h:height, stock:`48" × ${height}"`, cuts:'All square (90°)',            leftEdge:'', rightEdge:'', color:'#1a3f5c'},
-    {id:'R-FIX',  name:'Right wall — fixed panel', mat:'Polycarbonate', w:fixedPanelW, h:height, stock:`${fixedPanelW+1}" × ${height}"`, cuts:'All square (90°)',       leftEdge:'', rightEdge:'', color:'#1a3f5c'},
-    {id:'DOOR',   name:'Door panel',            mat:'Polycarbonate',  w:doorW,     h:doorH,  stock:`${doorW+1}" × ${doorH}"`, cuts:'All square (90°)',          leftEdge:'', rightEdge:'', color:'#2a5a7a'},
-    {id:'FR',     name:'Right front shield',    mat:'Polycarbonate',  w:35.1,      h:height, stock:`36" × ${height}"`, cuts:'Both ends angled',          leftEdge:'19.4° from sq (wall end)', rightEdge:'25.6° from sq (joint end)', color:'#1a4a6a'},
-    {id:'FC',     name:'Center front shield',   mat:'Polycarbonate',  w:45.9,      h:height, stock:`48" × ${height}"`, cuts:'Both ends angled',          leftEdge:'25.6° from sq', rightEdge:'25.6° from sq', color:'#1a4a6a'},
-    {id:'FL',     name:'Left front shield',     mat:'Polycarbonate',  w:35.1,      h:height, stock:`36" × ${height}"`, cuts:'Both ends angled',          leftEdge:'25.6° from sq (joint end)', rightEdge:'19.4° from sq (wall end)', color:'#1a4a6a'},
-  ];
-  const totalSqFt = pieces.reduce((sum,p)=>(sum + p.w*p.h/144),0);
-
-  // --- SVG panel layout (all panels shown as rectangles to scale, side by side) ---
-  const svgW=1000, svgH=380, padX=30, padY=50, gap=14;
-  const totalW_in = pieces.reduce((s,p)=>s+p.w,0) + gap*(pieces.length-1)/3.8;
-  const usableW = svgW - padX*2;
-  const sc = Math.min(usableW/totalW_in, (svgH-padY*2)/height);
-  let cx = padX;
-  let s = `<rect width="${svgW}" height="${svgH}" fill="#181b18"/>`;
-
-  // title
-  s += `<text x="${svgW/2}" y="22" font-size="13" fill="#e8b84b" text-anchor="middle" font-family="Courier New,monospace" font-weight="bold">POLYCARBONATE PANELS — SCALE LAYOUT (all same scale)</text>`;
-
-  pieces.forEach((p,i)=>{
-    const pw = p.w*sc, ph = p.h*sc;
-    const py = padY + (height-p.h)*sc; // align bottoms
-    // panel rectangle
-    s += `<rect x="${cx}" y="${py}" width="${pw}" height="${ph}" fill="${p.color}" stroke="#bcd6da" stroke-width="1.5" opacity="0.85"/>`;
-    // angled cut visual (hatched lines at ends if angled)
-    if(p.cuts.includes('angled')){
-      const ang = (p.id==='FC') ? 25.6 : (p.id==='FR'||p.id==='FL') ? 19.4 : 0;
-      const da = Math.tan(ang*Math.PI/180)*ph;
-      // left end miter marker
-      const leftAng = (p.id==='FR') ? 19.4 : 25.6;
-      const rightAng = (p.id==='FL') ? 19.4 : 25.6;
-      const daL = Math.tan(leftAng*Math.PI/180)*ph*0.5;
-      const daR = Math.tan(rightAng*Math.PI/180)*ph*0.5;
-      s += `<line x1="${cx}" y1="${py}" x2="${cx+daL}" y2="${py+ph}" stroke="#e8b84b" stroke-width="1.5" opacity="0.7"/>`;
-      s += `<line x1="${cx+pw}" y1="${py}" x2="${cx+pw-daR}" y2="${py+ph}" stroke="#e8b84b" stroke-width="1.5" opacity="0.7"/>`;
+      beams.forEach(b => {
+        html += `<tr><td class="k">Stick beam @ y=${b.y}" from back</td><td>1</td><td>${(2 * b.xr).toFixed(1)}"</td><td>rests on the wall top plates at both ends</td></tr>`;
+      });
+      html += `</table>`;
+      document.getElementById('topPlanCutlist').innerHTML = html;
     }
-    // piece ID label
-    s += `<text x="${cx+pw/2}" y="${py+ph/2-8}" font-size="11.5" text-anchor="middle" fill="#fff" font-family="Courier New,monospace" font-weight="bold">${p.id}</text>`;
-    // width dim below panel
-    const dimY = padY + height*sc + 16;
-    s += `<line x1="${cx}" y1="${dimY-4}" x2="${cx}" y2="${dimY+10}" stroke="#9aa39a" stroke-width="1"/>`;
-    s += `<line x1="${cx+pw}" y1="${dimY-4}" x2="${cx+pw}" y2="${dimY+10}" stroke="#9aa39a" stroke-width="1"/>`;
-    s += `<line x1="${cx}" y1="${dimY+3}" x2="${cx+pw}" y2="${dimY+3}" stroke="#9aa39a" stroke-width="1.2"/>`;
-    s += `<text x="${cx+pw/2}" y="${dimY+18}" font-size="11" text-anchor="middle" fill="#bcd6da" font-family="Courier New,monospace">${p.w.toFixed(1)}"</text>`;
-    // height dim on left side of first panel only, and every panel
-    s += `<text x="${cx+pw/2}" y="${py+ph/2+6}" font-size="10" text-anchor="middle" fill="#9aa39a" font-family="Courier New,monospace">${p.h}"</text>`;
-    cx += pw + gap;
-  });
 
-  // total area label
-  s += `<text x="${svgW-padX}" y="${svgH-10}" font-size="11.5" text-anchor="end" fill="#e8b84b" font-family="Courier New,monospace">Total: ${totalSqFt.toFixed(1)} ft²  (3/16" polycarbonate)</text>`;
-  svg.innerHTML = s;
+    // ---------- Polycarbonate cut list ----------
+    function drawPolyCutList(height, doorW) {
+      const svg = document.getElementById('polySvg');
+      const cutList = document.getElementById('polyCutList');
+      if (!svg || !cutList) return;
+      doorW = doorW || 28;
+      const doorH = Math.min(78, height - 2);
+      const JAMB_POST_W = 1.5; // actual width of the 2x2 jamb stud that sits between door and fixed panel
+      const fixedPanelW = Math.round(48 - doorW - JAMB_POST_W); // = 19" for 28" door, 23" for 24" door
 
-  // --- Cut list table ---
-  const orderGroups = {
-    '48" wide sheet (standard 4×8 or 4×10)': pieces.filter(p=>[48,45.9].some(w=>Math.abs(p.w-w)<3)),
-    '36" wide sheet': pieces.filter(p=>Math.abs(p.w-35.1)<2),
-    'Narrower cut (from offcut or custom)': pieces.filter(p=>p.w<35),
-  };
+      // All 7 pieces
+      const pieces = [
+        { id: 'L-SIDE', name: 'Left side wall', mat: 'Polycarbonate', w: 48, h: height, stock: `48" × ${height}"`, cuts: 'All square (90°)', leftEdge: '', rightEdge: '', color: '#1a3f5c' },
+        { id: 'R-FIX', name: 'Right wall — fixed panel', mat: 'Polycarbonate', w: fixedPanelW, h: height, stock: `${fixedPanelW + 1}" × ${height}"`, cuts: 'All square (90°)', leftEdge: '', rightEdge: '', color: '#1a3f5c' },
+        { id: 'DOOR', name: 'Door panel', mat: 'Polycarbonate', w: doorW, h: doorH, stock: `${doorW + 1}" × ${doorH}"`, cuts: 'All square (90°)', leftEdge: '', rightEdge: '', color: '#2a5a7a' },
+        { id: 'FR', name: 'Right front shield', mat: 'Polycarbonate', w: 36, h: height, stock: `36" × ${height}"`, cuts: 'Height only — no width trim', leftEdge: 'Route into stud groove', rightEdge: 'Route into stud groove', color: '#1a4a6a' },
+        { id: 'FC', name: 'Center front shield', mat: 'Polycarbonate', w: 48, h: height, stock: `48" × ${height}"`, cuts: 'Height only — no width trim', leftEdge: 'Route into stud groove', rightEdge: 'Route into stud groove', color: '#1a4a6a' },
+        { id: 'FL', name: 'Left front shield', mat: 'Polycarbonate', w: 36, h: height, stock: `36" × ${height}"`, cuts: 'Height only — no width trim', leftEdge: 'Route into stud groove', rightEdge: 'Route into stud groove', color: '#1a4a6a' },
+      ];
+      const totalSqFt = pieces.reduce((sum, p) => (sum + p.w * p.h / 144), 0);
 
-  let html = `<h3 style="color:#e8b84b;font-size:14px;margin:16px 0 8px;font-family:'Courier New',monospace;">Cut sheet — all 6 pieces</h3>
+      // --- SVG panel layout (all panels shown as rectangles to scale, side by side) ---
+      const svgW = 1000, svgH = 380, padX = 30, padY = 50, gap = 14;
+      const totalW_in = pieces.reduce((s, p) => s + p.w, 0) + gap * (pieces.length - 1) / 3.8;
+      const usableW = svgW - padX * 2;
+      const sc = Math.min(usableW / totalW_in, (svgH - padY * 2) / height);
+      let cx = padX;
+      let s = `<rect width="${svgW}" height="${svgH}" fill="#181b18"/>`;
+
+      // title
+      s += `<text x="${svgW / 2}" y="22" font-size="13" fill="#e8b84b" text-anchor="middle" font-family="Courier New,monospace" font-weight="bold">POLYCARBONATE PANELS — SCALE LAYOUT (all same scale)</text>`;
+
+      pieces.forEach((p, i) => {
+        const pw = p.w * sc, ph = p.h * sc;
+        const py = padY + (height - p.h) * sc; // align bottoms
+        // panel rectangle
+        s += `<rect x="${cx}" y="${py}" width="${pw}" height="${ph}" fill="${p.color}" stroke="#bcd6da" stroke-width="1.5" opacity="0.85"/>`;
+        // routing groove marker for front shields (small notches at panel edges)
+        if (p.id === 'FR' || p.id === 'FC' || p.id === 'FL') {
+          const gd = 4; // groove depth visual
+          [[cx, py + ph * 0.3, cx, py + ph * 0.7], [cx + pw, py + ph * 0.3, cx + pw, py + ph * 0.7]].forEach(([x1, y1, x2, y2]) => {
+            s += `<line x1="${x1}" y1="${y1}" x2="${x1 + (x1 === cx ? gd : -gd)}" y2="${y1}" stroke="#e8b84b" stroke-width="1.5"/>`;
+            s += `<line x1="${x1 + (x1 === cx ? gd : -gd)}" y1="${y1}" x2="${x1 + (x1 === cx ? gd : -gd)}" y2="${y2}" stroke="#e8b84b" stroke-width="1" stroke-dasharray="2 2"/>`;
+            s += `<line x1="${x1 + (x1 === cx ? gd : -gd)}" y1="${y2}" x2="${x1}" y2="${y2}" stroke="#e8b84b" stroke-width="1.5"/>`;
+          });
+          s += `<text x="${cx + pw / 2}" y="${py + 8}" font-size="9.5" text-anchor="middle" fill="#e8b84b" font-family="Courier New,monospace">route into studs</text>`;
+        }
+        // piece ID label
+        s += `<text x="${cx + pw / 2}" y="${py + ph / 2 - 8}" font-size="11.5" text-anchor="middle" fill="#fff" font-family="Courier New,monospace" font-weight="bold">${p.id}</text>`;
+        // width dim below panel
+        const dimY = padY + height * sc + 16;
+        s += `<line x1="${cx}" y1="${dimY - 4}" x2="${cx}" y2="${dimY + 10}" stroke="#9aa39a" stroke-width="1"/>`;
+        s += `<line x1="${cx + pw}" y1="${dimY - 4}" x2="${cx + pw}" y2="${dimY + 10}" stroke="#9aa39a" stroke-width="1"/>`;
+        s += `<line x1="${cx}" y1="${dimY + 3}" x2="${cx + pw}" y2="${dimY + 3}" stroke="#9aa39a" stroke-width="1.2"/>`;
+        s += `<text x="${cx + pw / 2}" y="${dimY + 18}" font-size="11" text-anchor="middle" fill="#bcd6da" font-family="Courier New,monospace">${p.w.toFixed(1)}"</text>`;
+        // height dim on left side of first panel only, and every panel
+        s += `<text x="${cx + pw / 2}" y="${py + ph / 2 + 6}" font-size="10" text-anchor="middle" fill="#9aa39a" font-family="Courier New,monospace">${p.h}"</text>`;
+        cx += pw + gap;
+      });
+
+      // total area label
+      s += `<text x="${svgW - padX}" y="${svgH - 10}" font-size="11.5" text-anchor="end" fill="#e8b84b" font-family="Courier New,monospace">Total: ${totalSqFt.toFixed(1)} ft²  (3/16" polycarbonate)</text>`;
+      svg.innerHTML = s;
+
+      // --- Cut list table ---
+      const orderGroups = {
+        '48" wide sheet': pieces.filter(p => p.w >= 45),
+        '36" wide sheet': pieces.filter(p => p.w >= 34 && p.w < 45),
+        'Narrower cut': pieces.filter(p => p.w < 34),
+      };
+
+      let html = `<h3 style="color:#e8b84b;font-size:14px;margin:16px 0 8px;font-family:'Courier New',monospace;">Cut sheet — all 6 pieces</h3>
   <table>
     <tr><td class="k" style="width:5%">#</td><td class="k" style="width:20%">Panel</td><td class="k">Cut size (W × H)</td><td class="k">Stock to order</td><td class="k">Qty</td><td class="k">Left edge cut</td><td class="k">Right edge cut</td><td class="k">Area</td></tr>`;
-  pieces.forEach((p,i)=>{
-    const area = (p.w*p.h/144).toFixed(2);
-    const leftCut = p.leftEdge || 'Square (90°)';
-    const rightCut = p.rightEdge || 'Square (90°)';
-    html += `<tr>
-      <td><span style="display:inline-block;width:10px;height:10px;background:${p.color};border:1px solid #bcd6da;vertical-align:middle;margin-right:4px;"></span>${i+1}</td>
+      pieces.forEach((p, i) => {
+        const area = (p.w * p.h / 144).toFixed(2);
+        const leftCut = p.leftEdge || 'Square (90°)';
+        const rightCut = p.rightEdge || 'Square (90°)';
+        html += `<tr>
+      <td><span style="display:inline-block;width:10px;height:10px;background:${p.color};border:1px solid #bcd6da;vertical-align:middle;margin-right:4px;"></span>${i + 1}</td>
       <td class="k">${p.name}</td>
       <td><b>${p.w.toFixed(1)}"</b> × <b>${p.h}"</b></td>
       <td>${p.stock}</td>
@@ -840,298 +1002,299 @@ function drawPolyCutList(height, doorW){
       <td style="font-size:11.5px">${rightCut}</td>
       <td>${area} ft²</td>
     </tr>`;
-  });
-  html += `<tr style="border-top:2px solid #e8b84b">
+      });
+      html += `<tr style="border-top:2px solid #e8b84b">
     <td colspan="4" style="color:#e8b84b;font-weight:bold">TOTAL</td>
     <td>6</td><td colspan="2"></td>
     <td style="color:#e8b84b;font-weight:bold">${totalSqFt.toFixed(1)} ft²</td>
   </tr></table>`;
 
-  html += `<h3 style="color:#e8b84b;font-size:14px;margin:16px 0 8px;font-family:'Courier New',monospace;">How to order (minimum stock sheets)</h3>
+      html += `<h3 style="color:#e8b84b;font-size:14px;margin:16px 0 8px;font-family:'Courier New',monospace;">How to order (minimum stock sheets)</h3>
   <table>
     <tr><td class="k">Sheet</td><td class="k">Size to order</td><td class="k">Qty</td><td class="k">Cuts from this sheet</td></tr>
-    <tr><td class="k">Sheet A</td><td>48" × ${height}"</td><td>1</td><td>Left side wall (48"×${height}") — full sheet</td></tr>
-    <tr><td class="k">Sheet B</td><td>48" × ${height}"</td><td>1</td><td>Center front shield (45.9"×${height}") — trim 2.1" off one edge</td></tr>
-    <tr><td class="k">Sheet C</td><td>48" × ${height}"</td><td>1</td><td>Right wall: rip into ${doorW}"×${doorH}" (door) + ${fixedPanelW}"×${height}" (fixed panel). The 1.5" between them is the jamb post — total ${doorW}+1.5+${fixedPanelW}=${doorW+1+fixedPanelW}" (0.5" absorbed by corner post seals)</td></tr>
-    <tr><td class="k">Sheet D</td><td>36" × ${height}"</td><td>1</td><td>Left front shield (35.1"×${height}") — trim ~0.9" + angle cuts</td></tr>
-    <tr><td class="k">Sheet E</td><td>36" × ${height}"</td><td>1</td><td>Right front shield (35.1"×${height}") — trim ~0.9" + angle cuts</td></tr>
-    <tr style="border-top:2px solid #e8b84b"><td class="k" style="color:#e8b84b;font-weight:bold">TOTAL</td><td style="color:#e8b84b">3 × 48"-wide + 2 × 36"-wide sheets</td><td style="color:#e8b84b">5</td><td style="font-size:11.5px;color:#9aa39a">All at ${height}" tall (cage height). If supplier stocks 4×8 sheets (96" tall) and your height ≤96", order those and cut to height.</td></tr>
+    <tr><td class="k">Sheet A</td><td>48" × ${height}"</td><td>1</td><td>Left side wall (48"×${height}") — cut to height only</td></tr>
+    <tr><td class="k">Sheet B</td><td>48" × ${height}"</td><td>1</td><td>Center front shield (48"×${height}") — cut to height only, no width trim. Routed into joint studs on both sides.</td></tr>
+    <tr><td class="k">Sheet C</td><td>48" × ${height}"</td><td>1</td><td>Right wall: rip into ${doorW}"×${doorH}" (door) + ${fixedPanelW}"×${height}" (fixed panel). The 1.5" between them is the jamb post — total ${doorW}+1.5+${fixedPanelW}=${doorW + 1 + fixedPanelW}" (0.5" absorbed by corner post seals)</td></tr>
+    <tr><td class="k">Sheet D</td><td>36" × ${height}"</td><td>1</td><td>Left front shield (36"×${height}") — cut to height only, no width trim. Routed into studs on both sides.</td></tr>
+    <tr><td class="k">Sheet E</td><td>36" × ${height}"</td><td>1</td><td>Right front shield (36"×${height}") — cut to height only, no width trim. Routed into studs on both sides.</td></tr>
+    <tr style="border-top:2px solid #e8b84b"><td class="k" style="color:#e8b84b;font-weight:bold">TOTAL</td><td style="color:#e8b84b">3 × 48"-wide + 2 × 36"-wide sheets</td><td style="color:#e8b84b">5</td><td style="font-size:11.5px;color:#9aa39a">All at ${height}" tall. Order 4×8 sheets if H≤96". The ONLY cuts needed are: height cuts on all panels, and one rip cut on Sheet C. No miter/angle cuts anywhere.</td></tr>
   </table>`;
 
-  cutList.innerHTML = html;
-}
+      cutList.innerHTML = html;
+    }
 
-function drawPlan(){
-  const svg = document.getElementById('planSvg');
-  const pts343 = splitToPoints([3,4,3]);
-  const backL={x:-45,y:0}, backR={x:45,y:0};
-  const sideL0={x:-45,y:48}, sideR0={x:45,y:48};
-  const jL=pts343[1], jR=pts343[2]; // front-panel joints
+    function drawPlan() {
+      const svg = document.getElementById('planSvg');
+      const pts343 = splitToPoints([3, 4, 3]);
+      const backL = { x: -45, y: 0 }, backR = { x: 45, y: 0 };
+      const sideL0 = { x: -45, y: 48 }, sideR0 = { x: 45, y: 48 };
+      const jL = pts343[1], jR = pts343[2]; // front-panel joints
 
-  // Layout: cage in a viewport with generous margin for dimension lines all around
-  // scale so the 90" wide + margins fits nicely
-  const scale=3.8;
-  const margin = {left:130, right:160, top:60, bottom:90};
-  const W=1000, H=560;
-  // cage origin: backL at (margin.left, H-margin.bottom)
-  const OX = margin.left + 45*scale; // x=0 of cage maps here
-  const OY = H - margin.bottom;
-  const X = x => OX + x*scale;
-  const Y = y => OY - y*scale;
+      // Layout: cage in a viewport with generous margin for dimension lines all around
+      // scale so the 90" wide + margins fits nicely
+      const scale = 3.8;
+      const margin = { left: 130, right: 160, top: 60, bottom: 90 };
+      const W = 1000, H = 560;
+      // cage origin: backL at (margin.left, H-margin.bottom)
+      const OX = margin.left + 45 * scale; // x=0 of cage maps here
+      const OY = H - margin.bottom;
+      const X = x => OX + x * scale;
+      const Y = y => OY - y * scale;
 
-  // helpers
-  function arrow(x1,y1,x2,y2,col){
-    const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
-    if(len<2)return'';
-    const ux=dx/len,uy=dy/len;
-    const ax=ux*7,ay=uy*7,px=-uy*3.5,py=ux*3.5;
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="1.2"/>
-    <polygon points="${x1},${y1} ${x1+ax+px},${y1+ay+py} ${x1+ax-px},${y1+ay-py}" fill="${col}"/>
-    <polygon points="${x2},${y2} ${x2-ax+px},${y2-ay+py} ${x2-ax-px},${y2-ay-py}" fill="${col}"/>`;
-  }
-  function extLine(x1,y1,x2,y2,col){ // extension / witness line
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="0.8" stroke-dasharray="none" opacity="0.5"/>`;
-  }
-  function dimH(x1,x2,y,label,col='#9aa39a',above=true){ // horizontal dimension
-    const mid=(x1+x2)/2, off=above?-18:18;
-    return arrow(x1,y,x2,y,col)+
-      `<text x="${mid}" y="${y+off}" font-size="12" text-anchor="middle" fill="${col}" font-family="Courier New,monospace">${label}</text>`;
-  }
-  function dimV(x,y1,y2,label,col='#9aa39a',right=false){ // vertical dimension
-    const mid=(y1+y2)/2, off=right?18:-18;
-    return arrow(x,y1,x,y2,col)+
-      `<text x="${x+off}" y="${mid+4}" font-size="12" text-anchor="${right?'start':'end'}" fill="${col}" font-family="Courier New,monospace" transform="rotate(-90 ${x+off} ${mid+4})">${label}</text>`;
-  }
-  function segLabel(p0,p1,label,col,offsetDir){ // label along an angled edge, offset perpendicular
-    const mx=(X(p0.x)+X(p1.x))/2, my=(Y(p0.y)+Y(p1.y))/2;
-    const dx=X(p1.x)-X(p0.x), dy=Y(p1.y)-Y(p0.y), len=Math.hypot(dx,dy)||1;
-    const nx=-dy/len, ny=dx/len; // perpendicular
-    const d=offsetDir||22;
-    const tx=mx+nx*d, ty=my+ny*d;
-    const ang=Math.atan2(dy,dx)*180/Math.PI;
-    const rot = (ang>90||ang<-90)?ang+180:ang;
-    return `<text x="${tx}" y="${ty}" font-size="12.5" text-anchor="middle" fill="${col}" font-family="Courier New,monospace" transform="rotate(${rot} ${tx} ${ty})">${label}</text>`;
-  }
-  function segDimLine(p0,p1,col,offset){
-    const dx=X(p1.x)-X(p0.x), dy=Y(p1.y)-Y(p0.y), len=Math.hypot(dx,dy)||1;
-    const nx=-dy/len, ny=dx/len;
-    const d=offset||18;
-    const x1=X(p0.x)+nx*d, y1=Y(p0.y)+ny*d, x2=X(p1.x)+nx*d, y2=Y(p1.y)+ny*d;
-    return arrow(x1,y1,x2,y2,col)+
-      extLine(X(p0.x),Y(p0.y),x1,y1,col)+
-      extLine(X(p1.x),Y(p1.y),x2,y2,col);
-  }
-  function angleMark(vx,vy,dir1x,dir1y,dir2x,dir2y,r,label,col){
-    const a1=Math.atan2(-dir1y,dir1x), a2=Math.atan2(-dir2y,dir2x);
-    const pts=[]; const n=12;
-    for(let i=0;i<=n;i++){const a=a1+(a2-a1)*i/n; pts.push({x:vx+r*Math.cos(a),y:vy-r*Math.sin(a)});}
-    const arc = pts.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ');
-    const midA=(a1+a2)/2;
-    const lx=vx+(r+14)*Math.cos(midA), ly=vy-(r+14)*Math.sin(midA);
-    return `<path d="${arc}" fill="none" stroke="${col}" stroke-width="1.2"/>
-      <text x="${lx}" y="${ly+4}" font-size="10.5" text-anchor="middle" fill="${col}" font-family="Courier New,monospace">${label}</text>`;
-  }
+      // helpers
+      function arrow(x1, y1, x2, y2, col) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2) return '';
+        const ux = dx / len, uy = dy / len;
+        const ax = ux * 7, ay = uy * 7, px = -uy * 3.5, py = ux * 3.5;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="1.2"/>
+    <polygon points="${x1},${y1} ${x1 + ax + px},${y1 + ay + py} ${x1 + ax - px},${y1 + ay - py}" fill="${col}"/>
+    <polygon points="${x2},${y2} ${x2 - ax + px},${y2 - ay + py} ${x2 - ax - px},${y2 - ay - py}" fill="${col}"/>`;
+      }
+      function extLine(x1, y1, x2, y2, col) { // extension / witness line
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="0.8" stroke-dasharray="none" opacity="0.5"/>`;
+      }
+      function dimH(x1, x2, y, label, col = '#9aa39a', above = true) { // horizontal dimension
+        const mid = (x1 + x2) / 2, off = above ? -18 : 18;
+        return arrow(x1, y, x2, y, col) +
+          `<text x="${mid}" y="${y + off}" font-size="12" text-anchor="middle" fill="${col}" font-family="Courier New,monospace">${label}</text>`;
+      }
+      function dimV(x, y1, y2, label, col = '#9aa39a', right = false) { // vertical dimension
+        const mid = (y1 + y2) / 2, off = right ? 18 : -18;
+        return arrow(x, y1, x, y2, col) +
+          `<text x="${x + off}" y="${mid + 4}" font-size="12" text-anchor="${right ? 'start' : 'end'}" fill="${col}" font-family="Courier New,monospace" transform="rotate(-90 ${x + off} ${mid + 4})">${label}</text>`;
+      }
+      function segLabel(p0, p1, label, col, offsetDir) { // label along an angled edge, offset perpendicular
+        const mx = (X(p0.x) + X(p1.x)) / 2, my = (Y(p0.y) + Y(p1.y)) / 2;
+        const dx = X(p1.x) - X(p0.x), dy = Y(p1.y) - Y(p0.y), len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len, ny = dx / len; // perpendicular
+        const d = offsetDir || 22;
+        const tx = mx + nx * d, ty = my + ny * d;
+        const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+        const rot = (ang > 90 || ang < -90) ? ang + 180 : ang;
+        return `<text x="${tx}" y="${ty}" font-size="12.5" text-anchor="middle" fill="${col}" font-family="Courier New,monospace" transform="rotate(${rot} ${tx} ${ty})">${label}</text>`;
+      }
+      function segDimLine(p0, p1, col, offset) {
+        const dx = X(p1.x) - X(p0.x), dy = Y(p1.y) - Y(p0.y), len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len, ny = dx / len;
+        const d = offset || 18;
+        const x1 = X(p0.x) + nx * d, y1 = Y(p0.y) + ny * d, x2 = X(p1.x) + nx * d, y2 = Y(p1.y) + ny * d;
+        return arrow(x1, y1, x2, y2, col) +
+          extLine(X(p0.x), Y(p0.y), x1, y1, col) +
+          extLine(X(p1.x), Y(p1.y), x2, y2, col);
+      }
+      function angleMark(vx, vy, dir1x, dir1y, dir2x, dir2y, r, label, col) {
+        const a1 = Math.atan2(-dir1y, dir1x), a2 = Math.atan2(-dir2y, dir2x);
+        const pts = []; const n = 12;
+        for (let i = 0; i <= n; i++) { const a = a1 + (a2 - a1) * i / n; pts.push({ x: vx + r * Math.cos(a), y: vy - r * Math.sin(a) }); }
+        const arc = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+        const midA = (a1 + a2) / 2;
+        const lx = vx + (r + 14) * Math.cos(midA), ly = vy - (r + 14) * Math.sin(midA);
+        return `<path d="${arc}" fill="none" stroke="${col}" stroke-width="1.2"/>
+      <text x="${lx}" y="${ly + 4}" font-size="10.5" text-anchor="middle" fill="${col}" font-family="Courier New,monospace">${label}</text>`;
+      }
 
-  let s = `<rect width="${W}" height="${H}" fill="#181b18"/>`;
+      let s = `<rect width="${W}" height="${H}" fill="#181b18"/>`;
 
-  // --- fill interior lightly ---
-  const rimPath = [backL,backR,sideR0,jR,jL,sideL0].map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ')+' Z';
-  s += `<path d="${rimPath}" fill="#e8b84b" fill-opacity="0.06"/>`;
+      // --- fill interior lightly ---
+      const rimPath = [backL, backR, sideR0, jR, jL, sideL0].map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.x)},${Y(p.y)}`).join(' ') + ' Z';
+      s += `<path d="${rimPath}" fill="#e8b84b" fill-opacity="0.06"/>`;
 
-  // --- perimeter walls ---
-  // back wall
-  s += `<line x1="${X(backL.x)}" y1="${Y(backL.y)}" x2="${X(backR.x)}" y2="${Y(backR.y)}" stroke="#c9a876" stroke-width="3"/>`;
-  // side walls
-  s += `<line x1="${X(backL.x)}" y1="${Y(backL.y)}" x2="${X(sideL0.x)}" y2="${Y(sideL0.y)}" stroke="#bcd6da" stroke-width="2.5"/>`;
-  s += `<line x1="${X(backR.x)}" y1="${Y(backR.y)}" x2="${X(sideR0.x)}" y2="${Y(sideR0.y)}" stroke="#bcd6da" stroke-width="2.5"/>`;
-  // front panels
-  [[sideR0,jR],[jR,jL],[jL,sideL0]].forEach(([a,b])=>{
-    s += `<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="#bcd6da" stroke-width="2.5"/>`;
-  });
+      // --- perimeter walls ---
+      // back wall
+      s += `<line x1="${X(backL.x)}" y1="${Y(backL.y)}" x2="${X(backR.x)}" y2="${Y(backR.y)}" stroke="#c9a876" stroke-width="3"/>`;
+      // side walls
+      s += `<line x1="${X(backL.x)}" y1="${Y(backL.y)}" x2="${X(sideL0.x)}" y2="${Y(sideL0.y)}" stroke="#bcd6da" stroke-width="2.5"/>`;
+      s += `<line x1="${X(backR.x)}" y1="${Y(backR.y)}" x2="${X(sideR0.x)}" y2="${Y(sideR0.y)}" stroke="#bcd6da" stroke-width="2.5"/>`;
+      // front panels
+      [[sideR0, jR], [jR, jL], [jL, sideL0]].forEach(([a, b]) => {
+        s += `<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="#bcd6da" stroke-width="2.5"/>`;
+      });
 
-  // --- corner dots ---
-  [backL,backR,sideR0,jR,jL,sideL0].forEach(p=>{
-    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="#e8b84b" stroke="#181b18" stroke-width="1.5"/>`;
-  });
+      // --- corner dots ---
+      [backL, backR, sideR0, jR, jL, sideL0].forEach(p => {
+        s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="#e8b84b" stroke="#181b18" stroke-width="1.5"/>`;
+      });
 
 
-  // === DIMENSION LINES ===
+      // === DIMENSION LINES ===
 
-  // 1. Back wall — 90" (below the cage)
-  const dimY_back = Y(0)+42;
-  s += extLine(X(backL.x),Y(backL.y),X(backL.x),dimY_back+4,'#9aa39a');
-  s += extLine(X(backR.x),Y(backR.y),X(backR.x),dimY_back+4,'#9aa39a');
-  s += dimH(X(backL.x),X(backR.x),dimY_back,'90"','#c9a876');
-  s += `<text x="${(X(backL.x)+X(backR.x))/2}" y="${dimY_back+16}" font-size="10.5" text-anchor="middle" fill="#c9a876" font-family="Courier New,monospace">back wall — PLYWOOD</text>`;
+      // 1. Back wall — 90" (below the cage)
+      const dimY_back = Y(0) + 42;
+      s += extLine(X(backL.x), Y(backL.y), X(backL.x), dimY_back + 4, '#9aa39a');
+      s += extLine(X(backR.x), Y(backR.y), X(backR.x), dimY_back + 4, '#9aa39a');
+      s += dimH(X(backL.x), X(backR.x), dimY_back, '90"', '#c9a876');
+      s += `<text x="${(X(backL.x) + X(backR.x)) / 2}" y="${dimY_back + 16}" font-size="10.5" text-anchor="middle" fill="#c9a876" font-family="Courier New,monospace">back wall — PLYWOOD</text>`;
 
-  // 2. LEFT side wall — 48" full depth + material label
-  // Two dimension offsets: outer at -58 for the full 48", inner at -36 for the label
-  const dimX_leftOuter = X(-45)-60;
-  const dimX_leftInner = X(-45)-36;
-  s += extLine(X(backL.x),Y(backL.y),dimX_leftOuter-4,Y(backL.y),'#bcd6da');
-  s += extLine(X(sideL0.x),Y(sideL0.y),dimX_leftOuter-4,Y(sideL0.y),'#bcd6da');
-  s += dimV(dimX_leftOuter,Y(sideL0.y),Y(backL.y),'48"','#bcd6da',false);
-  // material label along left wall
-  const leftMidSY = (Y(backL.y)+Y(sideL0.y))/2;
-  s += `<text x="${dimX_leftInner}" y="${leftMidSY+4}" font-size="10.5" text-anchor="end" fill="#bcd6da" font-family="Courier New,monospace" transform="rotate(-90 ${dimX_leftInner} ${leftMidSY+4})">LEFT WALL — POLYCARBONATE</text>`;
+      // 2. LEFT side wall — 48" full depth + material label
+      // Two dimension offsets: outer at -58 for the full 48", inner at -36 for the label
+      const dimX_leftOuter = X(-45) - 60;
+      const dimX_leftInner = X(-45) - 36;
+      s += extLine(X(backL.x), Y(backL.y), dimX_leftOuter - 4, Y(backL.y), '#bcd6da');
+      s += extLine(X(sideL0.x), Y(sideL0.y), dimX_leftOuter - 4, Y(sideL0.y), '#bcd6da');
+      s += dimV(dimX_leftOuter, Y(sideL0.y), Y(backL.y), '48"', '#bcd6da', false);
+      // material label along left wall
+      const leftMidSY = (Y(backL.y) + Y(sideL0.y)) / 2;
+      s += `<text x="${dimX_leftInner}" y="${leftMidSY + 4}" font-size="10.5" text-anchor="end" fill="#bcd6da" font-family="Courier New,monospace" transform="rotate(-90 ${dimX_leftInner} ${leftMidSY + 4})">LEFT WALL — POLYCARBONATE</text>`;
 
-  // 3. RIGHT side wall — split into DOOR (28") + FIXED PANEL (20") = 48" total
-  const DPLAN_W = 28;
-  const dFreeY = DPLAN_W;
-  const fixedPanelLen = 48 - DPLAN_W - 1.5; // deduct 1.5" jamb post → 18.5" → shown as 19" (rounds up for order)
+      // 3. RIGHT side wall — split into DOOR (28") + FIXED PANEL (20") = 48" total
+      const DPLAN_W = 28;
+      const dFreeY = DPLAN_W;
+      const fixedPanelLen = 48 - DPLAN_W - 1.5; // deduct 1.5" jamb post → 18.5" → shown as 19" (rounds up for order)
 
-  // Outer combined 48" dim (furthest right)
-  const dimX_rightOuter = X(45)+78;
-  s += extLine(X(backR.x),Y(backR.y),dimX_rightOuter+4,Y(backR.y),'#bcd6da');
-  s += extLine(X(sideR0.x),Y(sideR0.y),dimX_rightOuter+4,Y(sideR0.y),'#bcd6da');
-  s += dimV(dimX_rightOuter,Y(sideR0.y),Y(backR.y),'48"','#bcd6da',true);
-  s += `<text x="${dimX_rightOuter+18}" y="${(Y(backR.y)+Y(sideR0.y))/2+4}" font-size="10.5" text-anchor="start" fill="#bcd6da" font-family="Courier New,monospace" transform="rotate(90 ${dimX_rightOuter+18} ${(Y(backR.y)+Y(sideR0.y))/2+4})">RIGHT WALL — POLYCARBONATE</text>`;
+      // Outer combined 48" dim (furthest right)
+      const dimX_rightOuter = X(45) + 78;
+      s += extLine(X(backR.x), Y(backR.y), dimX_rightOuter + 4, Y(backR.y), '#bcd6da');
+      s += extLine(X(sideR0.x), Y(sideR0.y), dimX_rightOuter + 4, Y(sideR0.y), '#bcd6da');
+      s += dimV(dimX_rightOuter, Y(sideR0.y), Y(backR.y), '48"', '#bcd6da', true);
+      s += `<text x="${dimX_rightOuter + 18}" y="${(Y(backR.y) + Y(sideR0.y)) / 2 + 4}" font-size="10.5" text-anchor="start" fill="#bcd6da" font-family="Courier New,monospace" transform="rotate(90 ${dimX_rightOuter + 18} ${(Y(backR.y) + Y(sideR0.y)) / 2 + 4})">RIGHT WALL — POLYCARBONATE</text>`;
 
-  // Door portion: 28" — middle column
-  const dimX_door = X(45)+42;
-  s += extLine(X(backR.x),Y(backR.y),dimX_door,Y(backR.y),'#e8b84b');
-  s += extLine(X(backR.x),Y(dFreeY),dimX_door,Y(dFreeY),'#e8b84b');
-  s += dimV(dimX_door,Y(dFreeY),Y(backR.y),'28"','#e8b84b',true);
-  s += `<text x="${dimX_door+14}" y="${(Y(backR.y)+Y(dFreeY))/2+4}" font-size="10" text-anchor="start" fill="#e8b84b" font-family="Courier New,monospace" transform="rotate(90 ${dimX_door+14} ${(Y(backR.y)+Y(dFreeY))/2+4})">DOOR — POLY</text>`;
+      // Door portion: 28" — middle column
+      const dimX_door = X(45) + 42;
+      s += extLine(X(backR.x), Y(backR.y), dimX_door, Y(backR.y), '#e8b84b');
+      s += extLine(X(backR.x), Y(dFreeY), dimX_door, Y(dFreeY), '#e8b84b');
+      s += dimV(dimX_door, Y(dFreeY), Y(backR.y), '28"', '#e8b84b', true);
+      s += `<text x="${dimX_door + 14}" y="${(Y(backR.y) + Y(dFreeY)) / 2 + 4}" font-size="10" text-anchor="start" fill="#e8b84b" font-family="Courier New,monospace" transform="rotate(90 ${dimX_door + 14} ${(Y(backR.y) + Y(dFreeY)) / 2 + 4})">DOOR — POLY</text>`;
 
-  // Fixed panel portion: 20" — next column
-  const dimX_fixed = X(45)+58;
-  s += extLine(X(backR.x),Y(dFreeY),dimX_fixed,Y(dFreeY),'#bcd6da');
-  s += extLine(X(sideR0.x),Y(sideR0.y),dimX_fixed,Y(sideR0.y),'#bcd6da');
-  s += dimV(dimX_fixed,Y(sideR0.y),Y(dFreeY),`19"  fixed panel`,'#bcd6da',true);
+      // Fixed panel portion: 20" — next column
+      const dimX_fixed = X(45) + 58;
+      s += extLine(X(backR.x), Y(dFreeY), dimX_fixed, Y(dFreeY), '#bcd6da');
+      s += extLine(X(sideR0.x), Y(sideR0.y), dimX_fixed, Y(sideR0.y), '#bcd6da');
+      s += dimV(dimX_fixed, Y(sideR0.y), Y(dFreeY), `19"  fixed panel`, '#bcd6da', true);
 
-  // Jamb post callout — explain the 1.5" gap
-  s += `<line x1="${X(45)-6}" y1="${Y(dFreeY)}" x2="${X(45)+dimX_door-X(45)+4}" y2="${Y(dFreeY)}" stroke="#e8b84b" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>`;
-  s += `<text x="${X(45)-8}" y="${Y(dFreeY)-5}" font-size="10" text-anchor="end" fill="#e8b84b" font-family="Courier New,monospace">jamb post 1.5"</text>`;
-  s += `<text x="${X(45)-8}" y="${Y(dFreeY)+12}" font-size="10" text-anchor="end" fill="#9aa39a" font-family="Courier New,monospace">28+1.5+19 = 48.5"</text>`;
+      // Jamb post callout — explain the 1.5" gap
+      s += `<line x1="${X(45) - 6}" y1="${Y(dFreeY)}" x2="${X(45) + dimX_door - X(45) + 4}" y2="${Y(dFreeY)}" stroke="#e8b84b" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>`;
+      s += `<text x="${X(45) - 8}" y="${Y(dFreeY) - 5}" font-size="10" text-anchor="end" fill="#e8b84b" font-family="Courier New,monospace">jamb post 1.5"</text>`;
+      s += `<text x="${X(45) - 8}" y="${Y(dFreeY) + 12}" font-size="10" text-anchor="end" fill="#9aa39a" font-family="Courier New,monospace">28+1.5+19 = 48.5"</text>`;
 
-  // 4. Door drawing: door line + swing arc + hinge marker
-  s += `<line x1="${X(backR.x)}" y1="${Y(backR.y)}" x2="${X(sideR0.x)}" y2="${Y(dFreeY)}" stroke="#e8b84b" stroke-width="4" opacity="0.9"/>`;
-  const swPts=[]; for(let i=0;i<=14;i++){const a=(Math.PI/2)*(i/14); swPts.push({x:X(backR.x)+DPLAN_W*scale*Math.sin(a), y:Y(backR.y)+DPLAN_W*scale*(1-Math.cos(a))});}
-  s += `<path d="${swPts.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ')}" fill="none" stroke="#e8b84b" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.8"/>`;
-  s += `<text x="${X(backR.x)+DPLAN_W*scale*0.55}" y="${Y(backR.y)+DPLAN_W*scale*0.38}" font-size="10.5" fill="#e8b84b" font-family="Courier New,monospace">swing</text>`;
-  s += `<circle cx="${X(backR.x)}" cy="${Y(backR.y)}" r="6" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
-  s += `<text x="${X(backR.x)-8}" y="${Y(backR.y)-10}" font-size="10.5" text-anchor="end" fill="#e8b84b" font-family="Courier New,monospace">hinge</text>`;
+      // 4. Door drawing: door line + swing arc + hinge marker
+      s += `<line x1="${X(backR.x)}" y1="${Y(backR.y)}" x2="${X(sideR0.x)}" y2="${Y(dFreeY)}" stroke="#e8b84b" stroke-width="4" opacity="0.9"/>`;
+      const swPts = []; for (let i = 0; i <= 14; i++) { const a = (Math.PI / 2) * (i / 14); swPts.push({ x: X(backR.x) + DPLAN_W * scale * Math.sin(a), y: Y(backR.y) + DPLAN_W * scale * (1 - Math.cos(a)) }); }
+      s += `<path d="${swPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')}" fill="none" stroke="#e8b84b" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.8"/>`;
+      s += `<text x="${X(backR.x) + DPLAN_W * scale * 0.55}" y="${Y(backR.y) + DPLAN_W * scale * 0.38}" font-size="10.5" fill="#e8b84b" font-family="Courier New,monospace">swing</text>`;
+      s += `<circle cx="${X(backR.x)}" cy="${Y(backR.y)}" r="6" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
+      s += `<text x="${X(backR.x) - 8}" y="${Y(backR.y) - 10}" font-size="10.5" text-anchor="end" fill="#e8b84b" font-family="Courier New,monospace">hinge</text>`;
 
-  // 5. Front panel chord lengths — offset outward from each angled edge
-  s += segDimLine(sideR0,jR,'#bcd6da',28);
-  s += segLabel(sideR0,jR,'35.1"  (36" stock)','#bcd6da',28);
-  s += segDimLine(jR,jL,'#bcd6da',-30);
-  s += segLabel(jR,jL,'45.95"  (48" stock)','#bcd6da',-30);
-  s += segDimLine(jL,sideL0,'#bcd6da',28);
-  s += segLabel(jL,sideL0,'35.1"  (36" stock)','#bcd6da',28);
+      // 5. Front panel chord lengths — offset outward from each angled edge
+      s += segDimLine(sideR0, jR, '#bcd6da', 28);
+      s += segLabel(sideR0, jR, '36"  (full sheet, route into studs)', '#bcd6da', 28);
+      s += segDimLine(jR, jL, '#bcd6da', -30);
+      s += segLabel(jR, jL, '48"  (full sheet, route into studs)', '#bcd6da', -30);
+      s += segDimLine(jL, sideL0, '#bcd6da', 28);
+      s += segLabel(jL, sideL0, '36"  (full sheet, route into studs)', '#bcd6da', 28);
 
-  // 6. Interior corner angles
-  const shieldRdx = jR.x-sideR0.x, shieldRdy = jR.y-sideR0.y;
-  const shieldRlen = Math.hypot(shieldRdx,shieldRdy);
-  s += angleMark(X(sideR0.x),Y(sideR0.y), 0,48/48, shieldRdx/shieldRlen,shieldRdy/shieldRlen, 28,'141°','#9aa39a');
-  const inRdx=sideR0.x-jR.x, inRdy=sideR0.y-jR.y, inRlen=Math.hypot(inRdx,inRdy);
-  const outRdx=jL.x-jR.x, outRdy=jL.y-jR.y, outRlen=Math.hypot(outRdx,outRdy);
-  s += angleMark(X(jR.x),Y(jR.y), inRdx/inRlen,inRdy/inRlen, outRdx/outRlen,outRdy/outRlen, 24,'129°','#9aa39a');
+      // 6. Interior corner angles
+      const shieldRdx = jR.x - sideR0.x, shieldRdy = jR.y - sideR0.y;
+      const shieldRlen = Math.hypot(shieldRdx, shieldRdy);
+      s += angleMark(X(sideR0.x), Y(sideR0.y), 0, 48 / 48, shieldRdx / shieldRlen, shieldRdy / shieldRlen, 28, '141°', '#9aa39a');
+      const inRdx = sideR0.x - jR.x, inRdy = sideR0.y - jR.y, inRlen = Math.hypot(inRdx, inRdy);
+      const outRdx = jL.x - jR.x, outRdy = jL.y - jR.y, outRlen = Math.hypot(outRdx, outRdy);
+      s += angleMark(X(jR.x), Y(jR.y), inRdx / inRlen, inRdy / inRlen, outRdx / outRlen, outRdy / outRlen, 24, '129°', '#9aa39a');
 
-  // 7. Overall depth
-  const frontMidY = (jR.y+jL.y)/2;
-  s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(frontMidY)}" stroke="#5d6b62" stroke-width="1" stroke-dasharray="5 3"/>`;
-  s += dimV(X(0)+14,Y(0),Y(frontMidY),'75.36"  total depth','#5d6b62',true);
+      // 7. Overall depth
+      const frontMidY = (jR.y + jL.y) / 2;
+      s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(frontMidY)}" stroke="#5d6b62" stroke-width="1" stroke-dasharray="5 3"/>`;
+      s += dimV(X(0) + 14, Y(0), Y(frontMidY), '75.36"  total depth', '#5d6b62', true);
 
-  // 8. Legend + title
-  s += `<text x="18" y="22" font-size="13" fill="#e8b84b" font-family="Courier New,monospace" font-weight="bold">TOP-DOWN PLAN — DRUM CAGE (3-4-3 SPLIT, ALL FLAT PANELS)</text>`;
-  s += `<text x="18" y="40" font-size="10.5" fill="#9aa39a" font-family="Courier New,monospace">All dims = inches (inside face). ● = corner/jamb post. Gold = plywood back wall. Blue = polycarbonate. Yellow = poly door + swing arc.</text>`;
-  // scale bar
-  const sbX=18, sbY=H-14, sbLen=12*scale;
-  s += `<line x1="${sbX}" y1="${sbY}" x2="${sbX+sbLen}" y2="${sbY}" stroke="#9aa39a" stroke-width="2"/>`;
-  [0,sbLen].forEach(dx=>{ s+=`<line x1="${sbX+dx}" y1="${sbY-4}" x2="${sbX+dx}" y2="${sbY+4}" stroke="#9aa39a" stroke-width="1.5"/>`; });
-  s += `<text x="${sbX+sbLen/2}" y="${sbY-8}" font-size="11" text-anchor="middle" fill="#9aa39a" font-family="Courier New,monospace">= 1 ft (12")</text>`;
+      // 8. Legend + title
+      s += `<text x="18" y="22" font-size="13" fill="#e8b84b" font-family="Courier New,monospace" font-weight="bold">TOP-DOWN PLAN — DRUM CAGE (3-4-3 SPLIT, ALL FLAT PANELS)</text>`;
+      s += `<text x="18" y="40" font-size="10.5" fill="#9aa39a" font-family="Courier New,monospace">All dims = inches (inside face). ● = corner/jamb post. Gold = plywood back wall. Blue = polycarbonate. Yellow = poly door + swing arc.</text>`;
+      // scale bar
+      const sbX = 18, sbY = H - 14, sbLen = 12 * scale;
+      s += `<line x1="${sbX}" y1="${sbY}" x2="${sbX + sbLen}" y2="${sbY}" stroke="#9aa39a" stroke-width="2"/>`;
+      [0, sbLen].forEach(dx => { s += `<line x1="${sbX + dx}" y1="${sbY - 4}" x2="${sbX + dx}" y2="${sbY + 4}" stroke="#9aa39a" stroke-width="1.5"/>`; });
+      s += `<text x="${sbX + sbLen / 2}" y="${sbY - 8}" font-size="11" text-anchor="middle" fill="#9aa39a" font-family="Courier New,monospace">= 1 ft (12")</text>`;
 
-  svg.innerHTML = s;
-}
+      svg.innerHTML = s;
+    }
 
-// ---------- SVG floor plan / joist grid / casters ----------
-function drawFloorPlan(){
-  const svg = document.getElementById('floorSvg');
-  const pts343 = splitToPoints([3,4,3]);
-  const backL={x:-45,y:0}, backR={x:45,y:0}, sideL0={x:-45,y:48}, sideR0={x:45,y:48};
-  const scale=4.2, ox=450, oy=480;
-  const X = x=>ox+x*scale; const Y = y=>oy-y*scale;
-  let s = `<rect width="900" height="520" fill="#181b18"/>`;
-  const allPts = [backL,backR,sideR0,...pts343.slice(1,-1).reverse(),sideL0,backL];
-  let path = allPts.map((p,i)=>`${i===0?'M':'L'}${X(p.x)},${Y(p.y)}`).join(' ');
-  s += `<clipPath id="floorClip"><path d="${path}"/></clipPath>`;
-  s += `<path d="${path}" fill="#7a5a36" stroke="#e8b84b" stroke-width="2"/>`;
-  // joist grid, ~16in o.c., clipped to the floor outline
-  s += `<g clip-path="url(#floorClip)" stroke="#5d4527" stroke-width="3">`;
-  for(let x=-45;x<=45;x+=16){ s+=`<line x1="${X(x)}" y1="${Y(-5)}" x2="${X(x)}" y2="${Y(85)}"/>`; }
-  for(let y=0;y<=82;y+=16){ s+=`<line x1="${X(-60)}" y1="${Y(y)}" x2="${X(60)}" y2="${Y(y)}"/>`; }
-  // perimeter rim joist
-  s += `<path d="${path}" fill="none" stroke="#5d4527" stroke-width="5"/>`;
-  s += `</g>`;
-  // casters at 6 corners (incl. the 2 front panel joints)
-  [backL,backR,sideR0,pts343[2],pts343[1],sideL0].forEach(p=>{
-    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="9" fill="#111" stroke="#999" stroke-width="2"/>`;
-    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3" fill="#999"/>`;
-  });
-  s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">grid lines = floor joists (≈16" o.c.)   black circles = locking caster wheels</text>`;
-  // back wall dimension
-  const fdY=Y(0)+28;
-  s+=`<line x1="${X(-45)}" y1="${Y(0)}" x2="${X(-45)}" y2="${fdY+3}" stroke="#9aa39a" stroke-width="0.8" opacity="0.5"/>`;
-  s+=`<line x1="${X(45)}" y1="${Y(0)}" x2="${X(45)}" y2="${fdY+3}" stroke="#9aa39a" stroke-width="0.8" opacity="0.5"/>`;
-  s+=`<line x1="${X(-45)}" y1="${fdY}" x2="${X(45)}" y2="${fdY}" stroke="#9aa39a" stroke-width="1.2"/>`;
-  s+=`<text x="${(X(-45)+X(45))/2}" y="${fdY-6}" font-size="12" text-anchor="middle" fill="#9aa39a" font-family="Courier New,monospace">90" back wall</text>`;
-  svg.innerHTML = s;
-}
+    // ---------- SVG floor plan / joist grid / casters ----------
+    function drawFloorPlan() {
+      const svg = document.getElementById('floorSvg');
+      const pts343 = splitToPoints([3, 4, 3]);
+      const backL = { x: -45, y: 0 }, backR = { x: 45, y: 0 }, sideL0 = { x: -45, y: 48 }, sideR0 = { x: 45, y: 48 };
+      const scale = 4.2, ox = 450, oy = 480;
+      const X = x => ox + x * scale; const Y = y => oy - y * scale;
+      let s = `<rect width="900" height="520" fill="#181b18"/>`;
+      const allPts = [backL, backR, sideR0, ...pts343.slice(1, -1).reverse(), sideL0, backL];
+      let path = allPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.x)},${Y(p.y)}`).join(' ');
+      s += `<clipPath id="floorClip"><path d="${path}"/></clipPath>`;
+      s += `<path d="${path}" fill="#7a5a36" stroke="#e8b84b" stroke-width="2"/>`;
+      // joist grid, ~16in o.c., clipped to the floor outline
+      s += `<g clip-path="url(#floorClip)" stroke="#5d4527" stroke-width="3">`;
+      for (let x = -45; x <= 45; x += 16) { s += `<line x1="${X(x)}" y1="${Y(-5)}" x2="${X(x)}" y2="${Y(85)}"/>`; }
+      for (let y = 0; y <= 82; y += 16) { s += `<line x1="${X(-60)}" y1="${Y(y)}" x2="${X(60)}" y2="${Y(y)}"/>`; }
+      // perimeter rim joist
+      s += `<path d="${path}" fill="none" stroke="#5d4527" stroke-width="5"/>`;
+      s += `</g>`;
+      // casters at 6 corners (incl. the 2 front panel joints)
+      [backL, backR, sideR0, pts343[2], pts343[1], sideL0].forEach(p => {
+        s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="9" fill="#111" stroke="#999" stroke-width="2"/>`;
+        s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3" fill="#999"/>`;
+      });
+      s += `<text x="20" y="24" font-size="12.5" fill="#9aa39a">grid lines = floor joists (≈16" o.c.)   black circles = locking caster wheels</text>`;
+      // back wall dimension
+      const fdY = Y(0) + 28;
+      s += `<line x1="${X(-45)}" y1="${Y(0)}" x2="${X(-45)}" y2="${fdY + 3}" stroke="#9aa39a" stroke-width="0.8" opacity="0.5"/>`;
+      s += `<line x1="${X(45)}" y1="${Y(0)}" x2="${X(45)}" y2="${fdY + 3}" stroke="#9aa39a" stroke-width="0.8" opacity="0.5"/>`;
+      s += `<line x1="${X(-45)}" y1="${fdY}" x2="${X(45)}" y2="${fdY}" stroke="#9aa39a" stroke-width="1.2"/>`;
+      s += `<text x="${(X(-45) + X(45)) / 2}" y="${fdY - 6}" font-size="12" text-anchor="middle" fill="#9aa39a" font-family="Courier New,monospace">90" back wall</text>`;
+      svg.innerHTML = s;
+    }
 
-// ---------- wire up controls ----------
-let currentMode='343';
-document.querySelectorAll('button.mode').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('button.mode').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    currentMode = b.dataset.mode;
+    // ---------- wire up controls ----------
+    let currentMode = '343';
+    document.querySelectorAll('button.mode').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('button.mode').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        currentMode = b.dataset.mode;
+        refresh();
+      });
+    });
+    document.getElementById('heightSlider').addEventListener('input', e => {
+      document.getElementById('heightVal').textContent = e.target.value + '"';
+      refresh();
+    });
+    document.getElementById('floorThickSlider').addEventListener('input', e => {
+      document.getElementById('floorThickVal').textContent = e.target.value + '"';
+      refresh();
+    });
+    document.getElementById('doorToggle').addEventListener('change', refresh);
+    document.getElementById('doorWidthSelect').addEventListener('change', refresh);
+    document.getElementById('casterToggle').addEventListener('change', refresh);
+    document.getElementById('ceilingToggle').addEventListener('change', refresh);
+
+    function refresh() {
+      const h = parseFloat(document.getElementById('heightSlider').value);
+      const showDoor = document.getElementById('doorToggle').checked;
+      const showCasters = document.getElementById('casterToggle').checked;
+      const showCeiling = document.getElementById('ceilingToggle').checked;
+      const floorThickness = parseFloat(document.getElementById('floorThickSlider').value);
+      const doorW = parseFloat(document.getElementById('doorWidthSelect').value);
+      buildScene(currentMode, h, showDoor, showCasters, showCeiling, floorThickness, doorW);
+      drawBackWallFraming(h);
+      drawPolyCutList(h, doorW);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
     refresh();
-  });
-});
-document.getElementById('heightSlider').addEventListener('input',e=>{
-  document.getElementById('heightVal').textContent = e.target.value+'"';
-  refresh();
-});
-document.getElementById('floorThickSlider').addEventListener('input',e=>{
-  document.getElementById('floorThickVal').textContent = e.target.value+'"';
-  refresh();
-});
-document.getElementById('doorToggle').addEventListener('change', refresh);
-document.getElementById('doorWidthSelect').addEventListener('change', refresh);
-document.getElementById('casterToggle').addEventListener('change', refresh);
-document.getElementById('ceilingToggle').addEventListener('change', refresh);
+    drawPlan();
+    drawFloorPlan();
+    drawFramingPlan();
+    drawTopPlan();
+    drawPolyCutList(80, 28);
+    animate();
 
-function refresh(){
-  const h = parseFloat(document.getElementById('heightSlider').value);
-  const showDoor = document.getElementById('doorToggle').checked;
-  const showCasters = document.getElementById('casterToggle').checked;
-  const showCeiling = document.getElementById('ceilingToggle').checked;
-  const floorThickness = parseFloat(document.getElementById('floorThickSlider').value);
-  const doorW = parseFloat(document.getElementById('doorWidthSelect').value);
-  buildScene(currentMode, h, showDoor, showCasters, showCeiling, floorThickness, doorW);
-  drawBackWallFraming(h);
-  drawPolyCutList(h, doorW);
-}
-
-function animate(){
-  requestAnimationFrame(animate);
-  renderer.render(scene,camera);
-}
-refresh();
-drawPlan();
-drawFloorPlan();
-drawFramingPlan();
-drawTopPlan();
-drawPolyCutList(80, 28);
-animate();
-
-window.addEventListener('resize',()=>{
-  camera.aspect = viewerEl.clientWidth/viewerEl.clientHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
-});
-</script>
+    window.addEventListener('resize', () => {
+      camera.aspect = viewerEl.clientWidth / viewerEl.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
+    });
+  </script>
 </body>
+
 </html>
