@@ -236,12 +236,13 @@
 
   <div class="drawing-wrap">
     <h2>Back wall framing plan — every measurement, updates with the height slider</h2>
-    <svg id="backWallSvg" viewBox="0 0 800 560" width="100%" height="480"></svg>
+    <svg id="backWallSvg" viewBox="0 0 800 560" width="100%" height="500"></svg>
     <div id="backWallCutlist"></div>
-    <p class="note">This stud-wall elevation applies to the <b>back wall only</b> (90" wide, the only solid plywood
-      wall). Both side walls (left and right, 48" each) are now polycarbonate — they only need perimeter top/bottom
-      plates and the 6 corner posts, no interior stud grid. The right side wall also needs a reinforced post at the back
-      corner where the door hinges mount.</p>
+    <p class="note">1x2 lumber (3/4"×1.5" actual) grid frame for the back wall — same construction style as your
+      reference photo. Vertical studs at 6 equal bays (15" o.c.) with horizontal rails dividing each bay into equal
+      panels. The horizontal rails butt between the vertical studs and are face-screwed or pocket-screwed. The height
+      slider updates all cut lengths and the total lumber count live. This is the back wall only — both side walls
+      (polycarbonate) just need 2x2 corner posts + plates, no stud grid.</p>
   </div>
 
   <div class="drawing-wrap">
@@ -361,6 +362,7 @@
 
     const woodMat = new THREE.MeshStandardMaterial({ color: 0xc9a876, roughness: 0.85, metalness: 0.05, side: THREE.DoubleSide });
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x8a6a42, roughness: 0.8, side: THREE.DoubleSide });
+    const plywoodMat = new THREE.MeshStandardMaterial({ color: 0xd4a96a, roughness: 0.88, metalness: 0.0, side: THREE.DoubleSide });
     const polyMat = new THREE.MeshPhysicalMaterial({ color: 0xbcd6da, roughness: 0.15, metalness: 0, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x7a5a36, roughness: 0.9, side: THREE.DoubleSide });
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
@@ -614,8 +616,75 @@
         buildFoamCeiling(shapePts, height, rig);
       }
 
-      // back wall
-      rig.add(quad(backL, backR, 0, height, woodMat));
+      // back wall: 3/4" plywood skin on exterior + 1x2 frame on interior face
+      const PLY_T = 0.75;  // plywood skin thickness
+      const F_W = 1.5;     // 1x2 actual face width
+      const F_T = 0.75;    // 1x2 actual thickness (into wall)
+
+      // exterior plywood skin — sits behind the frame (y = -PLY_T to 0)
+      rig.add(quad({ x: backL.x, y: -PLY_T }, { x: backR.x, y: -PLY_T }, 0, height, plywoodMat));
+
+      // interior 1x2 frame: top plate, bottom plate, vertical studs, horizontal rails
+      // all at y=0 (interior face), projecting F_T into the wall
+      const bk_bays = 3, bk_W = 90, bk_spacing = bk_W / bk_bays; // 3 bays × 30" — studs at 0", 30", 60", 90"
+      const bk_plateT = F_W; // plates use face width as height
+      const bk_studH = height - 2 * bk_plateT;
+
+      function addBox(x, z, w, d, h, mat) { // w=X, d=Z(into wall), h=Y(vertical)
+        const g = new THREE.BoxGeometry(w, h, d);
+        const m = new THREE.Mesh(g, mat);
+        m.position.set(x + w / 2, h / 2, z - d / 2);
+        rig.add(m);
+      }
+
+      // bottom plate (full width, at y≈0, extending into wall)
+      addBox(backL.x, 0, bk_W, F_T, F_W, woodMat);
+      // top plate
+      addBox(backL.x, 0, bk_W, F_T, F_W, woodMat);
+      // move top plate to correct Y
+      rig.children[rig.children.length - 1].position.y = height - F_W / 2;
+
+      // vertical studs
+      for (let i = 0; i <= bk_bays; i++) {
+        const sx = backL.x + i * bk_spacing;
+        const sg = new THREE.BoxGeometry(F_W, bk_studH, F_T);
+        const sm = new THREE.Mesh(sg, woodMat);
+        sm.position.set(sx + F_W / 2, F_W + bk_studH / 2, -F_T / 2);
+        rig.add(sm);
+      }
+
+      // horizontal rails: divide each stud bay into equal sections (~21" target)
+      const bk_railRows = Math.round(bk_studH / 21);
+      const bk_panelH = bk_studH / bk_railRows;
+      for (let row = 1; row < bk_railRows; row++) {
+        const ry = F_W + row * bk_panelH - F_W / 2;
+        for (let col = 0; col < bk_bays; col++) {
+          const rx = backL.x + col * bk_spacing + F_W;
+          const railW = bk_spacing - F_W;
+          const rg = new THREE.BoxGeometry(railW, F_W, F_T);
+          const rm = new THREE.Mesh(rg, woodMat);
+          rm.position.set(rx + railW / 2, ry, -F_T / 2);
+          rig.add(rm);
+        }
+      }
+
+      // interior plywood panel covers — thin 1/4" ply filling each cell, flush with the interior face
+      const PANEL_T = 0.25;
+      const allRailYs = [F_W, ...Array.from({ length: bk_railRows - 1 }, (_, i) => F_W + (i + 1) * bk_panelH), height - F_W];
+      for (let col = 0; col < bk_bays; col++) {
+        const px = backL.x + col * bk_spacing + F_W;
+        const panelW = bk_spacing - F_W * 2; // inset between studs
+        for (let row = 0; row < bk_railRows; row++) {
+          const py0 = allRailYs[row] + F_W;   // above the rail
+          const py1 = allRailYs[row + 1] - F_W; // below the next rail
+          const panelH2 = py1 - py0;
+          if (panelH2 <= 0) continue;
+          const pg = new THREE.BoxGeometry(panelW, panelH2, PANEL_T);
+          const pm = new THREE.Mesh(pg, plywoodMat);
+          pm.position.set(px + panelW / 2, py0 + panelH2 / 2, -PANEL_T / 2);
+          rig.add(pm);
+        }
+      }
       // right side wall — polycarbonate with door; hinge at back corner (backR), door width = doorW
       // (2x2 posts at hinge corner, jamb, and sideR0 are built inside this function)
       buildRightPolyWallWithDoor(backR, sideR0, height, showDoor, doorW, rig);
@@ -740,8 +809,11 @@
   </table>
   <h2>Walls — sheet goods &amp; framing</h2>
   <table>
-    <tr><td class="k">3/4" plywood (back wall only + floor's 2 skins — both side walls are now polycarbonate)</td><td><b>${plySheets}</b> sheets, 4x8 (≈${totalSheathingFt2.toFixed(0)} ft² needed)</td></tr>
-    <tr><td class="k">2x3 framing — back wall studs, perimeter plates (all walls); 2x2 posts — all 6 cage corners + 3 door-frame posts</td><td><b>${wallFramingBoards8ft}</b> boards @ 8ft (≈${Math.ceil(wallFramingTotalFt)} linear ft). Poly side walls: only 2x2 corner posts + top/bottom plates, no interior stud grid.</td></tr>
+    <tr><td class="k">3/4" plywood — back wall exterior skin</td><td>≈${(90 * height / 144).toFixed(1)} ft² (${Math.ceil(90 * height / 144 / 28)} sheets) — screwed to the back face of the 1x2 frame</td></tr>
+    <tr><td class="k">3/4" plywood — floor deck + bottom skin (torsion box)</td><td>${Math.ceil(2 * FLOOR_FT2 / PLY_SHEET_FT2_USABLE)} sheets (≈${(2 * FLOOR_FT2).toFixed(0)} ft²) — top deck + bottom skin of the thick floor</td></tr>
+    <tr><td class="k">Total plywood sheets</td><td><b>${plySheets}</b> sheets 4×8 needed across back wall skin + floor</td></tr>
+    <tr><td class="k">1x2 lumber — back wall grid frame (studs + horizontal rails + plates)</td><td>See "Back wall framing plan" section for full cut list and linear footage. All 1x2 (3/4"×1.5" actual), assembled with pocket screws.</td></tr>
+    <tr><td class="k">2x3 / 2x2 lumber — perimeter plates (poly walls) + corner posts (all 6 corners) + door frame posts</td><td><b>${wallFramingBoards8ft}</b> boards @ 8ft (≈${Math.ceil(wallFramingTotalFt)} linear ft). Poly side walls: 2x2 corner posts + top/bottom plates only, no stud grid.</td></tr>
     <tr><td class="k">Clear polycarbonate — 3 front shields + left side wall + right side wall (incl. door)</td><td>2× 36"×${height}" (flat, side front shields) + 1× 48"×${height}" (flat, center front shield) + 1× 48"×${height}" (left side wall) + 1× 48"×${height}" (right side wall incl. door frame panel) — ≈${polyFt2.toFixed(0)} ft² total</td></tr>
     <tr><td class="k">Polycarbonate thickness</td><td>3/16" for all panels and the door slab — all cut flat, no bending</td></tr>
   </table>
@@ -830,39 +902,158 @@
     function drawBackWallFraming(height) {
       const svg = document.getElementById('backWallSvg');
       if (!svg) return;
-      const W = 90, plateT = 1.5, studH = height - 2 * plateT;
-      // equal division: pick the number of bays that gets closest to 16" o.c., then space evenly (no leftover odd bay)
-      const targetSpacing = 16;
-      const bays = Math.round(W / targetSpacing);
-      const spacing = W / bays;
+
+      // 1x2 lumber: nominal 1"x2", actual 3/4" (0.75") thick × 1.5" wide
+      const ACTUAL_W = 1.5;   // face width of 1x2 as seen on the wall elevation
+      const ACTUAL_T = 0.75;  // thickness (into the wall)
+
+      const W = 90;
+      const plateT = ACTUAL_W; // top/bottom plates lie flat: 1.5" tall on the elevation
+
+      // Vertical studs: 6 equal bays → 7 studs at 0,15,30,45,60,75,90"
+      const bays = 3, spacing = W / bays; // 3 bays × 30" — studs at 0", 30", 60", 90"
       const studXs = []; for (let i = 0; i <= bays; i++) studXs.push(i * spacing);
+      const studH = height - 2 * plateT;
 
-      const scale = 7, ox = 70, oy = 520;
-      const X = x => ox + x * scale, Y = y => oy - y * scale;
+      // Horizontal rails: divide each bay vertically into equal panels (target ~20-22" panel height)
+      const targetPanelH = 21;
+      const railRows = Math.round(studH / targetPanelH); // number of sections between plates
+      const panelH = studH / railRows;
+      const railYs = []; // heights of horizontal rails (from floor, inside the plates)
+      for (let i = 1; i < railRows; i++) railYs.push(plateT + i * panelH);
 
-      let s = `<rect width="800" height="560" fill="#181b18"/>`;
-      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * scale}" height="${height * scale}" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
-      s += `<rect x="${X(0)}" y="${Y(plateT)}" width="${W * scale}" height="${plateT * scale}" fill="#7a5a36" stroke="#5d4527"/>`;
-      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * scale}" height="${plateT * scale}" fill="#7a5a36" stroke="#5d4527"/>`;
+      const svgW = 800, svgH = 560;
+      const margin = { left: 80, right: 180, top: 60, bottom: 60 };
+      const scaleX = (svgW - margin.left - margin.right) / W;
+      const scaleY = (svgH - margin.top - margin.bottom) / height;
+      const sc = Math.min(scaleX, scaleY);
+      const OX = margin.left, OY = svgH - margin.bottom;
+      const X = x => OX + x * sc, Y = y => OY - y * sc;
+      const SW = ACTUAL_W * sc; // stud width in pixels
+
+      let s = `<rect width="${svgW}" height="${svgH}" fill="#181b18"/>`;
+
+      // Background wall outline
+      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * sc}" height="${height * sc}" fill="#1e2420" stroke="#3a4039" stroke-width="1"/>`;
+
+      // Plywood panel covers filling each cell (shown as lighter panels inset into the frame)
+      for (let col = 0; col < bays; col++) {
+        const panelXs = studXs[col] + ACTUAL_W, panelXe = studXs[col + 1];
+        if (panelXe <= panelXs) continue;
+        const allY = [plateT, ...railYs, height - plateT];
+        for (let row = 0; row < railRows; row++) {
+          const py0 = allY[row] + ACTUAL_W, py1 = allY[row + 1] - ACTUAL_W;
+          if (py1 <= py0) continue;
+          const inset = 2; // small visual gap from frame
+          // panel fill
+          s += `<rect x="${X(panelXs) + inset}" y="${Y(py1) + inset}" width="${(panelXe - panelXs) * sc - ACTUAL_W * sc - inset * 2}" height="${(py1 - py0) * sc - inset * 2}" fill="#d4a96a" opacity="0.7" stroke="#b8904a" stroke-width="1"/>`;
+          // panel label (only in first column)
+          if (col === 0 && row === 0) {
+            const midX = X(panelXs) + (panelXe - panelXs) * sc / 2 - ACTUAL_W * sc / 2;
+            const midY = Y(py1) + (py1 - py0) * sc / 2;
+            s += `<text x="${midX}" y="${midY + 4}" font-size="9" fill="#5d4527" text-anchor="middle" font-family="Courier New,monospace">plywood</text>`;
+            s += `<text x="${midX}" y="${midY + 15}" font-size="9" fill="#5d4527" text-anchor="middle" font-family="Courier New,monospace">panel</text>`;
+          }
+        }
+      }
+
+      // Bottom plate
+      s += `<rect x="${X(0)}" y="${Y(plateT)}" width="${W * sc}" height="${plateT * sc}" fill="#7a5a36" stroke="#5d4527" stroke-width="1"/>`;
+      // Top plate
+      s += `<rect x="${X(0)}" y="${Y(height)}" width="${W * sc}" height="${plateT * sc}" fill="#7a5a36" stroke="#5d4527" stroke-width="1"/>`;
+
+      // Vertical studs (drawn over the plates)
       studXs.forEach(x => {
-        s += `<rect x="${X(x) - 3}" y="${Y(height - plateT)}" width="6" height="${studH * scale}" fill="#c9a876" stroke="#5d4527"/>`;
-        s += `<text x="${X(x)}" y="${Y(0) + 16}" font-size="10" fill="#bcd6da" text-anchor="middle">${x}"</text>`;
+        s += `<rect x="${X(x)}" y="${Y(height - plateT)}" width="${SW}" height="${studH * sc}" fill="#c9a876" stroke="#5d4527" stroke-width="1"/>`;
       });
+
+      // Horizontal rails — span each bay between adjacent vertical studs
+      railYs.forEach(ry => {
+        for (let col = 0; col < bays; col++) {
+          const rx0 = studXs[col] + ACTUAL_W, rx1 = studXs[col + 1]; // rail butts against next stud
+          s += `<rect x="${X(rx0)}" y="${Y(ry + ACTUAL_W / 2)}" width="${(rx1 - rx0) * sc}" height="${ACTUAL_W * sc}" fill="#c9a876" stroke="#5d4527" stroke-width="0.8"/>`;
+        }
+        // rail height label on the right
+        s += `<text x="${X(W) + 8}" y="${Y(ry) + 4}" font-size="10" fill="#9aa39a" font-family="Courier New,monospace">@ ${ry.toFixed(1)}"</text>`;
+      });
+
+      // Stud position labels (bottom)
+      studXs.forEach(x => {
+        s += `<line x1="${X(x) + SW / 2}" y1="${Y(0) + 4}" x2="${X(x) + SW / 2}" y2="${Y(0) + 14}" stroke="#9aa39a" stroke-width="1"/>`;
+        s += `<text x="${X(x) + SW / 2}" y="${Y(0) + 24}" font-size="9.5" fill="#bcd6da" text-anchor="middle" font-family="Courier New,monospace">${x}"</text>`;
+      });
+
+      // Bay spacing labels (midpoints, above the frame)
       for (let i = 0; i < studXs.length - 1; i++) {
         const mx = (studXs[i] + studXs[i + 1]) / 2;
-        s += `<text x="${X(mx)}" y="${Y(height) - 8}" font-size="10.5" fill="#9aa39a" text-anchor="middle">${(studXs[i + 1] - studXs[i]).toFixed(1)}"</text>`;
+        s += `<text x="${X(mx) + SW / 2}" y="${Y(height) - 10}" font-size="10.5" fill="#9aa39a" text-anchor="middle" font-family="Courier New,monospace">${spacing.toFixed(0)}"</text>`;
       }
-      s += `<text x="${X(W / 2)}" y="${Y(height) - 26}" font-size="13" fill="#e8b84b" text-anchor="middle">90" wide</text>`;
-      s += `<text x="${X(0) - 40}" y="${Y(height / 2)}" font-size="13" fill="#e8b84b" text-anchor="middle" transform="rotate(-90 ${X(0) - 40} ${Y(height / 2)})">${height}" tall</text>`;
-      s += `<text x="${X(W) + 10}" y="${Y(height - plateT / 2) + 4}" font-size="10.5" fill="#bcd6da">${plateT}" top plate</text>`;
-      s += `<text x="${X(W) + 10}" y="${Y(plateT / 2) + 4}" font-size="10.5" fill="#bcd6da">${plateT}" bottom plate</text>`;
-      s += `<text x="${X(W) + 10}" y="${Y(height / 2)}" font-size="10.5" fill="#c9a876">stud: ${studH.toFixed(1)}" long</text>`;
+
+      // Panel height labels (right side, first column)
+      for (let row = 0; row < railRows; row++) {
+        const allY = [plateT, ...railYs, height - plateT];
+        const midY = (allY[row] + allY[row + 1]) / 2;
+        s += `<text x="${X(W) + 8}" y="${Y(midY) + 4}" font-size="10" fill="#5d6b62" text-anchor="start" font-family="Courier New,monospace">${panelH.toFixed(1)}"</text>`;
+      }
+
+      // Dimension: overall width
+      const dimY = Y(0) + 40;
+      s += `<line x1="${X(0)}" y1="${dimY}" x2="${X(W)}" y2="${dimY}" stroke="#e8b84b" stroke-width="1.5"/>`;
+      s += `<line x1="${X(0)}" y1="${dimY - 5}" x2="${X(0)}" y2="${dimY + 5}" stroke="#e8b84b" stroke-width="1.5"/>`;
+      s += `<line x1="${X(W)}" y1="${dimY - 5}" x2="${X(W)}" y2="${dimY + 5}" stroke="#e8b84b" stroke-width="1.5"/>`;
+      s += `<text x="${X(W / 2)}" y="${dimY + 14}" font-size="12" fill="#e8b84b" text-anchor="middle" font-family="Courier New,monospace">90"</text>`;
+
+      // Dimension: overall height
+      const dimX = X(0) - 35;
+      s += `<line x1="${dimX}" y1="${Y(0)}" x2="${dimX}" y2="${Y(height)}" stroke="#e8b84b" stroke-width="1.5"/>`;
+      s += `<line x1="${dimX - 5}" y1="${Y(0)}" x2="${dimX + 5}" y2="${Y(0)}" stroke="#e8b84b" stroke-width="1.5"/>`;
+      s += `<line x1="${dimX - 5}" y1="${Y(height)}" x2="${dimX + 5}" y2="${Y(height)}" stroke="#e8b84b" stroke-width="1.5"/>`;
+      s += `<text x="${dimX - 10}" y="${Y(height / 2) + 4}" font-size="12" fill="#e8b84b" text-anchor="middle" font-family="Courier New,monospace" transform="rotate(-90 ${dimX - 10} ${Y(height / 2) + 4})">${height}"</text>`;
+
+      // Callout labels
+      s += `<text x="${X(W) + 8}" y="${Y(height) + 14}" font-size="10.5" fill="#7a5a36" font-family="Courier New,monospace">← top plate  1x2 (1.5")</text>`;
+      s += `<text x="${X(W) + 8}" y="${Y(0) + 14}" font-size="10.5" fill="#7a5a36" font-family="Courier New,monospace">← bottom plate  1x2 (1.5")</text>`;
+      s += `<text x="${X(W) + 8}" y="${Y(height / 2) + 4}" font-size="10.5" fill="#c9a876" font-family="Courier New,monospace">← vertical stud  1x2</text>`;
+      s += `<text x="${X(W) + 8}" y="${Y(railYs[0] || height / 2) + 20}" font-size="10.5" fill="#c9a876" font-family="Courier New,monospace">← horizontal rail  1x2</text>`;
+
+      // Title
+      s += `<text x="${svgW / 2}" y="20" font-size="13" fill="#e8b84b" text-anchor="middle" font-family="Courier New,monospace" font-weight="bold">BACK WALL — 1x2 FRAME (interior) + 3/4" PLYWOOD SKIN (exterior)</text>`;
+      s += `<text x="${svgW / 2}" y="38" font-size="10.5" fill="#9aa39a" text-anchor="middle" font-family="Courier New,monospace">${bays} bays @ ${spacing}" o.c. (studs at 0", 30", 60", 90" — no studs at 15"/45"/75") · ${railRows} sections @ ${panelH.toFixed(1)}" · plywood panel covers shown in gold</text>`;
+
+      // Cross-section callout (mini diagram top-right showing the layering)
+      const csX = svgW - 160, csY = 50, csH = 80, csD = 60;
+      s += `<rect x="${csX}" y="${csY}" width="${csD}" height="${csH}" fill="#d4a96a" stroke="#e8b84b" stroke-width="1.5"/>`; // plywood
+      s += `<rect x="${csX + csD}" y="${csY}" width="10" height="${csH}" fill="#c9a876" stroke="#5d4527" stroke-width="1"/>`; // 1x2 frame face
+      s += `<text x="${csX + csD / 2}" y="${csY + csH / 2}" font-size="9.5" fill="#181b18" text-anchor="middle" font-family="Courier New,monospace" font-weight="bold">3/4" PLY</text>`;
+      s += `<text x="${csX + csD / 2}" y="${csY + csH / 2 + 12}" font-size="9" fill="#181b18" text-anchor="middle" font-family="Courier New,monospace">exterior</text>`;
+      s += `<text x="${csX + csD + 5}" y="${csY + csH / 2}" font-size="9" fill="#5d4527" text-anchor="start" font-family="Courier New,monospace" transform="rotate(90 ${csX + csD + 5} ${csY + csH / 2})">1x2 frame →</text>`;
+      s += `<text x="${csX - 5}" y="${csY - 6}" font-size="9.5" fill="#9aa39a" text-anchor="end" font-family="Courier New,monospace">cross-section (top view):</text>`;
+      s += `<line x1="${csX - 5}" y1="${csY + csH / 2}" x2="${csX}" y2="${csY + csH / 2}" stroke="#9aa39a" stroke-width="0.8" stroke-dasharray="2 2"/>`;
+      s += `<text x="${csX + csD + 25}" y="${csY - 6}" font-size="9" fill="#9aa39a" text-anchor="start" font-family="Courier New,monospace">interior →</text>`;
+
       svg.innerHTML = s;
 
-      const html = `<table><tr><td class="k">Member</td><td>Qty</td><td>Length</td><td>Notes</td></tr>
-    <tr><td class="k">Bottom plate</td><td>1</td><td>90"</td><td>flat 2x lumber, screwed to the floor rim</td></tr>
-    <tr><td class="k">Top plate</td><td>1</td><td>90"</td><td>flat 2x lumber, carries the light top panel's back edge</td></tr>
-    <tr><td class="k">Studs</td><td>${studXs.length}</td><td>${studH.toFixed(1)}" each</td><td>${bays} equal bays of ${spacing.toFixed(1)}" o.c., at x = ${studXs.map(x => x.toFixed(1) + '"').join(', ')} from the left corner — no leftover odd bay</td></tr>
+      // Cut list table
+      const totalVertStuds = studXs.length; // 4 studs for 3 bays
+      const totalHorizRails = railYs.length * bays;
+      const railLenEach = spacing - ACTUAL_W;
+      const totalLF = totalVertStuds * studH / 12 + 2 * W / 12 + totalHorizRails * railLenEach / 12;
+
+      // Panel covers: one per cell, inset between studs + rails
+      const totalPanels = bays * railRows;
+      const panelCoverW = spacing - 2 * ACTUAL_W; // clear width between studs
+      const panelCoverH = panelH - 2 * ACTUAL_W;  // clear height between rails
+
+      const html = `<table>
+    <tr><td class="k">Member</td><td>Qty</td><td>Cut length</td><td>Notes</td></tr>
+    <tr><td class="k" style="color:#d4a96a">3/4" plywood skin (exterior face)</td><td>1–2 sheets</td><td>90" × ${height}"</td><td>Screwed to the back face of the 1x2 frame — visible exterior surface. 2 sheets of 4×8 side by side, or one 4×10 if H≤120".</td></tr>
+    <tr><td class="k" style="color:#d4a96a">Plywood panel covers (interior cells)</td><td>${totalPanels}</td><td>${panelCoverW.toFixed(1)}"W × ${panelCoverH.toFixed(1)}"H each</td><td>1/4" or 1/8" thin plywood / hardboard inset into each cell (${bays} columns × ${railRows} rows = ${totalPanels} panels). Can be glued in or friction-fit.</td></tr>
+    <tr><td class="k">Top plate</td><td>1</td><td>90"</td><td>1x2 flat on top edge</td></tr>
+    <tr><td class="k">Bottom plate</td><td>1</td><td>90"</td><td>1x2 flat on bottom edge — screws to floor rim</td></tr>
+    <tr><td class="k">Vertical studs</td><td>${totalVertStuds}</td><td>${studH.toFixed(1)}" each</td><td>1x2 on edge — ${bays} bays @ ${spacing.toFixed(0)}" o.c. Studs at x = ${studXs.map(x => x.toFixed(0) + '"').join(', ')} (removed 15", 45", 75" from original 6-bay layout)</td></tr>
+    <tr><td class="k">Horizontal rails</td><td>${totalHorizRails}</td><td>${railLenEach.toFixed(1)}" each</td><td>1x2 on edge — ${railYs.length} row${railYs.length > 1 ? 's' : ''} @ ${panelH.toFixed(1)}" section height, spanning each ${spacing.toFixed(0)}" bay. Rail heights: ${[plateT, ...railYs].map(r => r.toFixed(1) + '"').join(', ')} from floor</td></tr>
+    <tr style="border-top:1px solid #e8b84b"><td class="k">Pocket / wood screws</td><td colspan="2">≈${(totalHorizRails * 2 + totalVertStuds * 4)} screws</td><td>1-5/8" coarse for frame. Plus 1-1/4" screws for ply skin to frame.</td></tr>
+    <tr style="border-top:2px solid #e8b84b"><td class="k" style="color:#e8b84b">TOTAL 1x2 LUMBER</td><td colspan="2" style="color:#e8b84b">${totalLF.toFixed(1)} linear ft</td><td style="color:#9aa39a">Order in 8ft sticks: ${Math.ceil(totalLF / 8)} sticks minimum + ${Math.ceil(totalLF / 8) + 2} with waste allowance</td></tr>
   </table>`;
       document.getElementById('backWallCutlist').innerHTML = html;
     }
