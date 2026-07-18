@@ -266,12 +266,18 @@
       which edges get routed into the studs.</p>
   </div>
 
-  <div class="drawing-wrap" id="bomWrap">
-    <h2>Materials list (bill of materials)</h2>
-    <div id="bom"></div>
-    <p class="note">Quantities are planning estimates sized to the dimensions/height above, with ~10–15% waste already
-      factored into sheet/board counts. Round up to your supplier's stock sizes; always good to get 1 extra sheet of
-      plywood for the inevitable mis-cut.</p>
+  <div class="drawing-wrap" id="shopWrap">
+    <h2>🛒 Complete Shopping List — Home Depot &amp; Lowe's with SKUs &amp; prices</h2>
+    <div id="shopList"></div>
+    <p class="note">Prices shown are approximate national averages as of July 2025 and vary by store location — always
+      check your local store before going. Polycarbonate sheets are NOT stocked at HD/Lowes in the sizes needed; order
+      those separately from a plastics supplier. The "Qty" column updates if you change the height slider above.</p>
+  </div>
+  <h2>Materials list (bill of materials)</h2>
+  <div id="bom"></div>
+  <p class="note">Quantities are planning estimates sized to the dimensions/height above, with ~10–15% waste already
+    factored into sheet/board counts. Round up to your supplier's stock sizes; always good to get 1 extra sheet of
+    plywood for the inevitable mis-cut.</p>
   </div>
 
   <script>
@@ -1214,6 +1220,212 @@
       cutList.innerHTML = html;
     }
 
+    // ---------- Shopping List ----------
+    function buildShoppingList(height, floorThickness, doorW) {
+      const el = document.getElementById('shopList');
+      if (!el) return;
+      doorW = doorW || 28;
+      const FLOOR_FT2 = 45.3;
+      const fixedPanelW = Math.round(48 - doorW - 1.5);
+
+      // ---- Qty calculations ----
+      // 1x2 back wall: 7 studs + 1 top + 1 bottom + rails (3 rows × 3 bays = 9 rails of 28.5")
+      const bk_studH = height - 3; // approx
+      const bk1x2LF = (4 * bk_studH + 2 * 90 + 9 * 28.5) / 12;
+      const bk1x2Sticks = Math.ceil(bk1x2LF / 8) + 2;
+      // 1x2 top frame cross-beams: 3 pieces
+      const topBeamSticks = 3;
+      const total1x2Sticks = bk1x2Sticks + topBeamSticks;
+      // 2x2 posts: 6 cage corners + 3 door posts = 9 × height
+      const total2x2LF = 9 * height / 12;
+      const total2x2Sticks = Math.ceil(total2x2LF / 8) + 1;
+      // 2x3 perimeter plates for poly walls (top+bottom each side): 2×(48+48+90)/12 × 2 = top & bottom
+      const platesFt = 2 * (48 + 48 + 90 + 120) / 12; // all wall perimeter top+bottom plates
+      const platesSticks = Math.ceil(platesFt / 8) + 1;
+      // 2x6 floor frame:
+      const floorLF = 25.2 + 45.3; // rim + joists
+      const floor2x6Sticks = Math.ceil(floorLF / 8) + 2;
+      // Plywood 3/4"
+      const wallFt2 = 90 * height / 144;
+      const floorFt2 = 2 * FLOOR_FT2;
+      const totalPlyFt2 = wallFt2 + floorFt2;
+      const plySheets = Math.ceil(totalPlyFt2 / 28);
+      // 1/4" plywood panel covers + top split panel
+      const lightPlySheets = Math.ceil((12 * (28.5 * 17) / 144 + FLOOR_FT2) / 28) + 1;
+
+      const lumberSizeFloor = floorThickness <= 3.5 ? '2x4' : floorThickness <= 5.5 ? '2x6' : '2x8';
+      const floorPriceEach = floorThickness <= 3.5 ? 6.50 : floorThickness <= 5.5 ? 11.50 : 16.00;
+
+      const sections = [
+        {
+          title: '🪵  WOOD — FRAMING LUMBER',
+          note: 'Buy SPF (Spruce-Pine-Fir) or #2 whitewood — both HD and Lowes carry these in the lumber aisle.',
+          items: [
+            {
+              name: `1×2×8 Furring Strip — back wall frame studs, rails, plates (also used for top 3 cross-beams)`,
+              qty: `${total1x2Sticks} sticks`, unitPrice: 2.50,
+              hd: { sku: '100009348', label: '1 in. x 2 in. x 8 ft. Furring Strip', url: 'https://www.homedepot.com/p/100009348' },
+              lw: { item: '4511 / 1000427899', label: '1×2×8 Whitewood Furring Strip', url: 'https://www.lowes.com/pd/1-in-x-2-in-x-8-ft-Whitewood-Furring-Strip/1000427899' },
+            },
+            {
+              name: `2×2×8 Furring Strip — all 6 cage corner posts + 3 door-frame posts (hinge, jamb, far end)`,
+              qty: `${total2x2Sticks} sticks`, unitPrice: 4.00,
+              hd: { sku: '202518911', label: '2 in. x 2 in. x 8 ft. Furring Strip', url: 'https://www.homedepot.com/p/202518911' },
+              lw: { item: '1000483975', label: '2×2×8 Whitewood Furring Strip', url: 'https://www.lowes.com/pd/2-in-x-8-ft-Whitewood-Furring-Strip/1000483975' },
+            },
+            {
+              name: `2×3×8 or 2×2×8 — perimeter top &amp; bottom plates for all poly walls (left side, right side, front shield edges)`,
+              qty: `${platesSticks} sticks`, unitPrice: 4.50,
+              hd: { sku: '', label: '2×3 Furring Strip or 2×2 — lumber aisle', url: 'https://www.homedepot.com/b/Lumber-Composites-Dimensional-Lumber/1x2/N-5yc1vZc3tcZ1z0ywxz' },
+              lw: { item: '', label: '2×2 or 2×3 framing — lumber aisle', url: 'https://www.lowes.com/pl/lumber-composites/framing-lumber/2922113685368' },
+            },
+            {
+              name: `${lumberSizeFloor}×8 ft — floor torsion-box frame (rim + joists, ${floorThickness}" depth = matches ${lumberSizeFloor} actual depth)`,
+              qty: `${floor2x6Sticks} sticks`, unitPrice: floorPriceEach,
+              hd: { sku: '', label: `${lumberSizeFloor} framing lumber 8 ft`, url: `https://www.homedepot.com/b/Lumber-Composites-Dimensional-Lumber-Framing-Lumber/${lumberSizeFloor}/8-ft/N-5yc1vZc55wZ1z0ywy6Z1z1rkql` },
+              lw: { item: '', label: `${lumberSizeFloor}×8 #2 SPF framing`, url: 'https://www.lowes.com/pl/lumber-composites/framing-lumber/dimensional-lumber/2-in-x-6-in/8-ft/4294402500-4294402614-1021459475413' },
+            },
+          ]
+        },
+        {
+          title: '🪵  SHEET GOODS — PLYWOOD',
+          note: 'CDX grade is fine for the back wall skin and floor. For the panel covers, get 1/4" sanded plywood or 1/8" hardboard/MDF.',
+          items: [
+            {
+              name: `3/4" CDX Plywood 4×8 — back wall skin (exterior) + floor torsion box (top deck + bottom skin)`,
+              qty: `${plySheets} sheets`, unitPrice: 64.98,
+              hd: { sku: 'CDX34FDHD', label: '3/4 in. 4x8 CDX Plywood', url: 'https://www.homedepot.com/b/Lumber-Composites-Plywood/3-4/4-ft-x-8-ft/N-5yc1vZbqm7Z1z0mcq7Z1z1a6x9' },
+              lw: { item: '', label: '3/4 in. 4×8 plywood — lumber aisle', url: 'https://www.lowes.com/pl/lumber-composites/plywood/4294402508' },
+            },
+            {
+              name: `1/4" sanded plywood or hardboard 4×8 — back wall interior panel covers (12 cells) + lightweight top split panel`,
+              qty: `${lightPlySheets} sheets`, unitPrice: 22.00,
+              hd: { sku: '', label: '1/4 in. 4×8 sanded plywood or hardboard', url: 'https://www.homedepot.com/b/Lumber-Composites-Plywood/4-ft-x-8-ft/N-5yc1vZbqm7Z1z1a6x9' },
+              lw: { item: '', label: '1/4 in. plywood panel — lumber aisle', url: 'https://www.lowes.com/pl/lumber-composites/plywood/4294402508' },
+            },
+          ]
+        },
+        {
+          title: '🔩  HARDWARE — CASTERS, HINGES, FASTENERS',
+          items: [
+            {
+              name: '4" locking swivel plate casters, 300 lb+ rated — need 6 total (buy 2 packs of 4)',
+              qty: '2 packs (8 total — 6 used, 2 spare)', unitPrice: 69.00,
+              hd: { sku: '331229956', label: '3-in. Locking Swivel Casters 4-pack 600 lb', url: 'https://www.homedepot.com/p/331229956' },
+              lw: { item: '', label: '4 in. locking casters — hardware aisle', url: 'https://www.lowes.com/pl/hardware/casters/4294387660' },
+            },
+            {
+              name: 'Heavy-duty butt hinges 3"–4" — 3 for the polycarbonate door',
+              qty: '3 hinges', unitPrice: 6.50,
+              hd: { sku: '', label: 'Door hinges — door hardware aisle', url: 'https://www.homedepot.com/b/Doors-Windows-Door-Hardware-Hinges/N-5yc1vZaqihZ1z0lum8' },
+              lw: { item: '', label: 'Door hinges 3.5 in. — hardware aisle', url: 'https://www.lowes.com/pl/door-hardware/hinges/4294397756' },
+            },
+            {
+              name: 'Door handle/pull + barrel bolt or latch — for polycarbonate door',
+              qty: '1 set', unitPrice: 15.00,
+              hd: { sku: '', label: 'Door handle + latch — door hardware', url: 'https://www.homedepot.com/b/Doors-Windows-Door-Hardware/N-5yc1vZaqih' },
+              lw: { item: '', label: 'Door hardware — hardware aisle', url: 'https://www.lowes.com/pl/door-hardware/4294397756' },
+            },
+            {
+              name: 'Wood screws 1-5/8" coarse (box of 100–200) — pocket screws for 1x2 frame',
+              qty: '1 box', unitPrice: 13.00,
+              hd: { sku: '', label: '#8 1-5/8 in. wood screws', url: 'https://www.homedepot.com/b/Hardware-Fasteners-Screws/N-5yc1vZc21mZ1z0vcv4' },
+              lw: { item: '', label: '1-5/8 in. coarse wood screws', url: 'https://www.lowes.com/pl/hardware/screws/4294387617' },
+            },
+            {
+              name: 'Wood screws 1-1/4" coarse (box of 100) — attaching plywood skins to frame',
+              qty: '1 box', unitPrice: 11.00,
+              hd: { sku: '', label: '#8 1-1/4 in. wood screws', url: 'https://www.homedepot.com/b/Hardware-Fasteners-Screws/N-5yc1vZc21mZ1z0vcv4' },
+              lw: { item: '', label: '1-1/4 in. coarse wood screws', url: 'https://www.lowes.com/pl/hardware/screws/4294387617' },
+            },
+            {
+              name: 'Construction adhesive (PL Premium or Liquid Nails) — floor torsion box skin to frame',
+              qty: '2 tubes', unitPrice: 8.00,
+              hd: { sku: '', label: 'PL Premium Construction Adhesive', url: 'https://www.homedepot.com/b/Paint-Adhesives-Construction-Adhesives/N-5yc1vZar2dZ1z0jrnh' },
+              lw: { item: '', label: 'Construction adhesive — adhesives aisle', url: 'https://www.lowes.com/pl/adhesives/4294387546' },
+            },
+            {
+              name: 'Clear silicone sealant — polycarbonate panel edges, door seal, joints',
+              qty: '3 tubes', unitPrice: 9.00,
+              hd: { sku: '', label: 'Clear silicone sealant — caulk aisle', url: 'https://www.homedepot.com/b/Paint-Caulk-Sealants/N-5yc1vZar2dZ1z0ik5f' },
+              lw: { item: '', label: 'Clear silicone — caulk aisle', url: 'https://www.lowes.com/pl/caulks-sealants/4294387548' },
+            },
+            {
+              name: 'Corner L-brackets / mending plates (pack of 20) — joint reinforcement',
+              qty: '1 pack', unitPrice: 13.00,
+              hd: { sku: '', label: 'Corner brackets — hardware aisle', url: 'https://www.homedepot.com/b/Hardware-Angles-Brackets/N-5yc1vZc21mZ1z0q0yw' },
+              lw: { item: '', label: 'L-brackets / mending plates', url: 'https://www.lowes.com/pl/framing-hardware/4294387619' },
+            },
+          ]
+        },
+        {
+          title: '🔇  INSULATION & ACOUSTIC',
+          note: 'Acoustic foam tiles are NOT at HD/Lowes — order on Amazon or from an acoustic supplier (Acoustimac, Foambymail, etc.).',
+          items: [
+            {
+              name: 'Rockwool/Mineral wool insulation batts (Safe\'n\'Sound or similar) — fills floor torsion box cavity',
+              qty: `≈${Math.ceil(FLOOR_FT2)} ft² coverage`, unitPrice: 45.00,
+              hd: { sku: '', label: 'Rockwool Safe\'n\'Sound insulation — insulation aisle', url: 'https://www.homedepot.com/b/Building-Materials-Insulation-Batts-Rolls/N-5yc1vZaqnsZ1z0nk4r' },
+              lw: { item: '', label: 'Mineral wool insulation — building supplies', url: 'https://www.lowes.com/pl/insulation/building-supplies/4294382912' },
+            },
+            {
+              name: 'Acoustic foam pyramid tiles 12×12" or 24×24" (for ceiling underside) — ORDER ONLINE',
+              qty: `≈${Math.ceil(FLOOR_FT2)} ft² (Amazon/Acoustimac)`, unitPrice: 55.00,
+              hd: { sku: 'N/A', label: 'Not stocked at HD — order from Amazon', url: 'https://www.amazon.com/s?k=acoustic+foam+pyramid+tiles' },
+              lw: { item: 'N/A', label: 'Not stocked at Lowes — order from Amazon', url: 'https://www.amazon.com/s?k=acoustic+foam+pyramid+tiles' },
+            },
+          ]
+        },
+        {
+          title: '🔲  POLYCARBONATE SHIELDS — ORDER FROM PLASTICS SUPPLIER',
+          note: '⚠️ NOT stocked at HD/Lowes in these sizes. Order from: TAP Plastics (tapplastics.com), ePlastics (eplastics.com), Grainger (grainger.com), or your local plastic sheet supplier. Request 3/16" thick clear twin-wall or solid polycarbonate, cut to size.',
+          items: [
+            { name: 'Left side wall — 48"W × height"H', qty: '1 sheet, 3/16" solid clear poly', unitPrice: null, hd: { sku: 'N/A — order from plastics supplier', url: 'https://www.eplastics.com' }, lw: { item: 'N/A', url: 'https://www.eplastics.com' } },
+            { name: `Right wall fixed panel — ${fixedPanelW}"W × height"H`, qty: '1 sheet, 3/16" solid clear poly', unitPrice: null, hd: { sku: 'N/A — order from plastics supplier', url: 'https://www.eplastics.com' }, lw: { item: 'N/A', url: 'https://www.eplastics.com' } },
+            { name: `Door panel — ${doorW}"W × doorH"H`, qty: '1 sheet, 3/16" solid clear poly', unitPrice: null, hd: { sku: 'N/A — order from plastics supplier', url: 'https://www.eplastics.com' }, lw: { item: 'N/A', url: 'https://www.eplastics.com' } },
+            { name: 'Right front shield — 36"W × height"H (route into studs, full sheet)', qty: '1 sheet, 3/16" solid clear poly', unitPrice: null, hd: { sku: 'N/A — order from plastics supplier', url: 'https://www.eplastics.com' }, lw: { item: 'N/A', url: 'https://www.eplastics.com' } },
+            { name: 'Center front shield — 48"W × height"H (route into studs, full sheet)', qty: '1 sheet, 3/16" solid clear poly', unitPrice: null, hd: { sku: 'N/A — order from plastics supplier', url: 'https://www.eplastics.com' }, lw: { item: 'N/A', url: 'https://www.eplastics.com' } },
+            { name: 'Left front shield — 36"W × height"H (route into studs, full sheet)', qty: '1 sheet, 3/16" solid clear poly', unitPrice: null, hd: { sku: 'N/A — order from plastics supplier', url: 'https://www.eplastics.com' }, lw: { item: 'N/A', url: 'https://www.eplastics.com' } },
+          ]
+        }
+      ];
+
+      let totalEst = 0;
+      let html = '';
+      sections.forEach(sec => {
+        html += `<h3 style="color:#e8b84b;font-size:14px;margin:18px 0 6px;font-family:'Courier New',monospace;">${sec.title}</h3>`;
+        if (sec.note) html += `<p style="font-size:11.5px;color:#9aa39a;margin:0 0 8px;border-left:2px solid #e8b84b;padding-left:8px;">${sec.note}</p>`;
+        html += `<table><tr>
+      <td class="k" style="width:32%">Item</td>
+      <td class="k" style="width:10%">Qty</td>
+      <td class="k" style="width:9%">Unit ~$</td>
+      <td class="k" style="width:9%">Total ~$</td>
+      <td class="k" style="width:20%">Home Depot</td>
+      <td class="k" style="width:20%">Lowe's</td>
+    </tr>`;
+        sec.items.forEach(it => {
+          const lineTotal = it.unitPrice ? (it.unitPrice * (parseFloat(it.qty) || 1)).toFixed(0) : '—';
+          if (it.unitPrice) totalEst += it.unitPrice * (parseFloat(it.qty) || 1);
+          const hdLink = it.hd.url ? `<a href="${it.hd.url}" target="_blank" style="color:#bcd6da">${it.hd.sku || it.hd.label}</a>` : it.hd.sku || '—';
+          const lwLink = it.lw.url ? `<a href="${it.lw.url}" target="_blank" style="color:#bcd6da">${it.lw.item || it.lw.label || '—'}</a>` : '—';
+          html += `<tr>
+        <td class="k">${it.name}</td>
+        <td>${it.qty}</td>
+        <td>${it.unitPrice ? '~$' + it.unitPrice.toFixed(0) : 'order'}</td>
+        <td style="color:#e8b84b">${it.unitPrice ? '~$' + lineTotal : '—'}</td>
+        <td style="font-size:11px">${hdLink}</td>
+        <td style="font-size:11px">${lwLink}</td>
+      </tr>`;
+        });
+        html += `</table>`;
+      });
+      html += `<div style="margin:16px 0;padding:12px;background:#232825;border:1px solid #e8b84b;border-radius:3px;font-family:'Courier New',monospace;">
+    <span style="color:#e8b84b;font-size:14px;font-weight:bold;">Estimated WOOD + HARDWARE total (excl. polycarbonate): ~$${Math.round(totalEst).toLocaleString()}</span><br>
+    <span style="color:#9aa39a;font-size:11.5px;">Polycarbonate sheets will add ~$300–600+ depending on size and supplier. Prices vary by store location — verify before buying. This estimate uses ${height}" cage height and ${doorW}" door width.</span>
+  </div>`;
+      el.innerHTML = html;
+    }
+
     function drawPlan() {
       const svg = document.getElementById('planSvg');
       const pts343 = splitToPoints([3, 4, 3]);
@@ -1466,6 +1678,7 @@
       buildScene(currentMode, h, showDoor, showCasters, showCeiling, floorThickness, doorW);
       drawBackWallFraming(h);
       drawPolyCutList(h, doorW);
+      buildShoppingList(h, floorThickness, doorW);
     }
 
     function animate() {
@@ -1478,6 +1691,7 @@
     drawFramingPlan();
     drawTopPlan();
     drawPolyCutList(80, 28);
+    buildShoppingList(80, 5.5, 28);
     animate();
 
     window.addEventListener('resize', () => {
